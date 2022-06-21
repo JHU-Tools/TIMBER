@@ -665,7 +665,7 @@ def ProgressBar(it, prefix="", size=60, out=sys.stdout):
         out.flush()        
     show(0)
     for i, item in enumerate(it):
-        yield item
+        yield item	# return the actual item (e.g. filename) without finishing function execution
         show(i+1)
     out.write("\n")
     out.flush()
