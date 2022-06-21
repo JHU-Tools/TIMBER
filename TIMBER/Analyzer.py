@@ -109,12 +109,18 @@ class analyzer(object):
         # Setup TChains for multiple or single file
         self._eventsChain = ROOT.TChain(self._eventsTreeName) 
         self.RunChain = ROOT.TChain(runTreeName) 
-        if isinstance(self.fileName,list):
+        if isinstance(self.fileName,list):	# assumes list of line-separated .root files
 	    for f in ProgressBar(self.fileName, "Opening files: "):
 	        self._addFile(f)
         else:
-            self._addFile(self.fileName)
-        
+	    if not self.fileName.endswith(".txt"):
+		print("Opening file...")
+                self._addFile(self.fileName)
+            else:	# opening .txt file containing line-separated .root filenames
+		fNames = self._parseTxt(self.fileName)
+		for f in ProgressBar(fNames, "Opening files: "):
+		    self._addFile(f)
+
         # Make base RDataFrame
         BaseDataFrame = ROOT.RDataFrame(self._eventsChain) 
         self.BaseNode = Node('base',BaseDataFrame) 
@@ -173,7 +179,14 @@ class analyzer(object):
         for f in glob.glob(os.environ["TIMBERPATH"]+'TIMBER/Framework/include/*.h'):
             if f.split('/')[-1] in skipHeaders: continue
             CompileCpp('#include "%s"\n'%f)
- 
+
+    def _parseTxt(self,f):
+	'''Parse .txt file and return list of all lines in it
+	@param f (str): .txt filename
+	'''
+	txt_file = open(f,"r")
+	return [l.strip() for l in txt_file.readlines()] 
+
     def _addFile(self,f):
         '''Add file to TChains being tracked.
 
