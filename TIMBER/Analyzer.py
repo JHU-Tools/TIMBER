@@ -5,7 +5,7 @@ Home of main classes for TIMBER.
 """
 
 from TIMBER.CollectionOrganizer import CollectionOrganizer
-from TIMBER.Tools.Common import GenerateHash, GetHistBinningTuple, CompileCpp, ConcatCols, GetStandardFlags, ExecuteCmd, LoadColumnNames
+from TIMBER.Tools.Common import GenerateHash, GetHistBinningTuple, CompileCpp, ConcatCols, GetStandardFlags, ExecuteCmd, LoadColumnNames, ProgressBar
 from clang import cindex
 from collections import OrderedDict
 
@@ -109,10 +109,9 @@ class analyzer(object):
         # Setup TChains for multiple or single file
         self._eventsChain = ROOT.TChain(self._eventsTreeName) 
         self.RunChain = ROOT.TChain(runTreeName) 
-        print ('Opening files...')
         if isinstance(self.fileName,list):
-            for f in self.fileName:
-                self._addFile(f)
+	    for f in ProgressBar(self.fileName, "Opening files: "):
+	        self._addFile(f)
         else:
             self._addFile(self.fileName)
         
