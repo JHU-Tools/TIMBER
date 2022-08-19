@@ -665,9 +665,9 @@ def MakePullPlot( data,bkg):
             ibkg_err = abs(bkg_down.GetBinContent(ibin)-bkg.GetBinContent(ibin))
 
         if idata_err != None: # deal with case when there's no data error (ie. bin content = 0)
-            sigma = sqrt(idata_err*idata_err + ibkg_err*ibkg_err)
+            sigma = math.sqrt(idata_err*idata_err + ibkg_err*ibkg_err)
         else:
-            sigma = sqrt(ibkg_err*ibkg_err)
+            sigma = math.sqrt(ibkg_err*ibkg_err)
 
         if sigma != 0 :
             ipull = (pull.GetBinContent(ibin))/sigma
