@@ -590,14 +590,14 @@ def EasyPlots(name, histlist, bkglist=[],signals=[],colors=[],titles=[],logy=Fal
 
                 # Do the signals
                 if len(signals) > 0: 
-                    signals[hist_index].SetLineColor(kBlue)
+                    signals[hist_index].SetLineColor(ROOT.kBlue)
                     signals[hist_index].SetLineWidth(2)
                     if logy == True:
                         signals[hist_index].SetMinimum(1e-3)
                     legends[hist_index].AddEntry(signals[hist_index],signals[hist_index].GetName().split('_')[0],'L')
                     signals[hist_index].Draw('hist same')
 
-                tot_hists[hist_index].SetFillColor(kBlack)
+                tot_hists[hist_index].SetFillColor(ROOT.kBlack)
                 tot_hists[hist_index].SetFillStyle(3354)
 
                 tot_hists[hist_index].Draw('e2 same')
