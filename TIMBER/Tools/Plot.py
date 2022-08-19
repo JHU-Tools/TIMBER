@@ -177,7 +177,7 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
             total.Draw('histsame')
         else:
             for bkg in bkgs.values():
-                bkgStack.GetXaxis().SetTitleOffset(1.1)
+                bkg.GetXaxis().SetTitleOffset(1.1)
                 _doAxisTitles(bkg,split=doSoverB)
                 bkg.Draw('same hist')
     for h in signals.values():
