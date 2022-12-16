@@ -177,7 +177,7 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
             total.Draw('histsame')
         else:
             for bkg in bkgs.values():
-                bkgStack.GetXaxis().SetTitleOffset(1.1)
+                bkg.GetXaxis().SetTitleOffset(1.1)
                 _doAxisTitles(bkg,split=doSoverB)
                 bkg.Draw('same hist')
     for h in signals.values():
@@ -590,14 +590,14 @@ def EasyPlots(name, histlist, bkglist=[],signals=[],colors=[],titles=[],logy=Fal
 
                 # Do the signals
                 if len(signals) > 0: 
-                    signals[hist_index].SetLineColor(kBlue)
+                    signals[hist_index].SetLineColor(ROOT.kBlue)
                     signals[hist_index].SetLineWidth(2)
                     if logy == True:
                         signals[hist_index].SetMinimum(1e-3)
                     legends[hist_index].AddEntry(signals[hist_index],signals[hist_index].GetName().split('_')[0],'L')
                     signals[hist_index].Draw('hist same')
 
-                tot_hists[hist_index].SetFillColor(kBlack)
+                tot_hists[hist_index].SetFillColor(ROOT.kBlack)
                 tot_hists[hist_index].SetFillStyle(3354)
 
                 tot_hists[hist_index].Draw('e2 same')
@@ -665,9 +665,9 @@ def MakePullPlot( data,bkg):
             ibkg_err = abs(bkg_down.GetBinContent(ibin)-bkg.GetBinContent(ibin))
 
         if idata_err != None: # deal with case when there's no data error (ie. bin content = 0)
-            sigma = sqrt(idata_err*idata_err + ibkg_err*ibkg_err)
+            sigma = math.sqrt(idata_err*idata_err + ibkg_err*ibkg_err)
         else:
-            sigma = sqrt(ibkg_err*ibkg_err)
+            sigma = math.sqrt(ibkg_err*ibkg_err)
 
         if sigma != 0 :
             ipull = (pull.GetBinContent(ibin))/sigma

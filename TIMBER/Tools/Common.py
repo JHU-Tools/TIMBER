@@ -646,4 +646,28 @@ def GenerateHash(length=8):
     '''
     return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for i in range(length))
 
+def ProgressBar(it, prefix="", size=60, out=sys.stdout):
+    '''Generate a progress bar from any iterable of a given size. Taken from: https://stackoverflow.com/a/34482761
+    Usage:
+
+    for i in ProgressBar(it):
+        # do something
+
+    @param it (iterable): Any iterable (dict, list, etc) with which to generate the amount of elements in the bar
+    @param prefix (str, optional): Prefix string to prepend to progress bar
+    @param size (int): Length of progress bar in characters
+    @param out (ostream): Output stream, i.e. file, stdout, stderr, etc
+    '''
+    count = len(it)
+    def show(j):
+        x = int(size*j/count)
+        out.write("%s[%s%s] %i/%i\r" % (prefix, u"#"*x, "."*(size-x), j, count))
+        out.flush()        
+    show(0)
+    for i, item in enumerate(it):
+        yield item	# return the actual item (e.g. filename) without finishing function execution
+        show(i+1)
+    out.write("\n")
+    out.flush()
+
 ## @}
