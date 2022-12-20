@@ -228,6 +228,7 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
     CMS_lumi.CMS_lumi(c, iPeriod=year, sim=True)
 
     c.Print(outfilename,outfilename.split('.')[-1])
+    c.Close()	# close canvas to prevent segfault
 
 def MakeSoverB(stack_of_bkgs,signal,forceForward=False,forceBackward=False):
     '''Makes the SoverB distribution and returns it.
