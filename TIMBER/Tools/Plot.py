@@ -112,7 +112,7 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
         # If bkg, set fill color and add to stack
         if pname in bkgs.keys():
             h.SetFillColorAlpha(colors[pname],0.2 if not stackBkg else 1)
-            h.SetLineWidth(0) 
+	    h.SetLineWidth(0) 
             if stackBkg: bkgStack.Add(h)
             if colors[pname] not in colors_in_legend:
                 legend.AddEntry(h,leg_name,'f')
@@ -163,9 +163,11 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
 
     if len(bkgs.keys()) > 0:
         if stackBkg:
+	    # First, draw background THStack and do axis labels
             bkgStack.Draw('hist')
             bkgStack.GetXaxis().SetTitleOffset(1.1)
             _doAxisTitles(bkgStack,split=doSoverB)
+	    # Now, create transparent histogram with black edges to go over the total
             total = bkgStack.GetHists().First().Clone()
             total.Reset()
             for stack_hist in bkgStack.GetHists():
@@ -173,8 +175,10 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
             total.SetLineColorAlpha(ROOT.kBlack,1)
             total.SetLineWidth(1)
             total.SetFillColorAlpha(ROOT.kBlack,0)
+	    # Re-draw the background THStack
             bkgStack.Draw('hist')
-            total.Draw('histsame')
+	    # Draw the transparent histogram to give a black edge over final result
+            total.Draw('histsame') 
         else:
             for bkg in bkgs.values():
                 bkg.GetXaxis().SetTitleOffset(1.1)
