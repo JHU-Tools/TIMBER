@@ -29,7 +29,7 @@ fi
 
 if [ ! -d "bin/libarchive" ] 
 then
-  git clone https://github.com/libarchive/libarchive.git
+  git clone -b v3.6.2 https://github.com/libarchive/libarchive.git
   cd libarchive
   cmake . -DCMAKE_INSTALL_PREFIX=../bin/libarchive
   make
