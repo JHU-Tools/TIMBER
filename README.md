@@ -18,7 +18,7 @@ you're obviously free to use your favorite tool for the job (you can install vir
 ```
 python -m virtualenv timber-env
 source timber-env/bin/activate
-git clone https://github.com/lcorcodilos/TIMBER.git
+git clone https://github.com/ammitra/TIMBER.git
 cd TIMBER
 source setup.sh
 ```
