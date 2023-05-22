@@ -200,9 +200,15 @@ class analyzer(object):
             if ROOT.TFile.Open(f,'READ') == None:
                 raise ReferenceError('File %s does not exist'%f)	    
             tempF = ROOT.TFile.Open(f,'READ')
-	    if tempF.Get(self._eventsTreeName).GetEntry() != 0:
+	    # Check if Events tree name is in the file
+	    existingTrees = tempF.GetListOfKeys()
+	    treeNames = [i.GetName() for i in existingTrees]
+	    if self._eventsTreeName not in treeNames:
+		print('WARNING: The following file does NOT contain an Events TTree, skipping.\n\tFile: {}'.format(f))
+		pass
+	    elif tempF.Get(self._eventsTreeName).GetEntry() != 0:
 		self._eventsChain.Add(f)
-	    if tempF.Get(self._eventsTreeName).GetEntry() == 0:
+	    elif tempF.Get(self._eventsTreeName).GetEntry() == 0:
 		if self.skipEmpty:
 		    print("WARNING: The following file contains an empty Events TTree, skipping. If you wish to add regardless, please call the analyzer with 'skipEmpty=False'\n\tFile: {}".format(f))
 		    pass
@@ -413,8 +419,6 @@ class analyzer(object):
         out = []
         for i in columns:
             if i in cols_in_node: out.append(i)
-            else: print ("WARNING: Column %s not found and will be dropped."%i)
-
         return out
 
     def GetTriggerString(self,trigList):
@@ -657,7 +661,7 @@ class analyzer(object):
         '''
         return self.SubCollection(name, basecoll, newOrderCol, skip)
 
-    def ObjectFromCollection(self,name,basecoll,index,skip=[]):
+    def ObjectFromCollection(self,name,basecoll,index,skip=[],strict=True):
         '''Similar to creating a SubCollection except the newly defined columns
         are single values (not vectors/arrays) for the object at the provided index.
         
@@ -665,6 +669,10 @@ class analyzer(object):
         @param basecoll (str): Name of derivative collection.
         @param index (str): Index of the collection item to extract.
         @param skip ([str]): List of variable names in the collection to skip.
+        @param strict (bool): Whether or not to require strict definitions. I.e., if
+            trying to derive a new collection from "Jet" base collection, then strict
+            definitions would ensure only the "Jet" collections are renamed, not any
+            column including the word "Jet".
 
         Returns:
             None. New nodes created with the sub collection.
@@ -672,7 +680,10 @@ class analyzer(object):
         Example:
             ObjectFromCollection('LeadJet','FatJet','0')
         '''
-        collBranches = [str(cname) for cname in self.DataFrame.GetColumnNames() if ( (basecoll in str(cname)) and (str(cname) not in skip))]
+        if not strict:
+            collBranches = [str(cname) for cname in self.DataFrame.GetColumnNames() if ( (basecoll in str(cname)) and (str(cname) not in skip))]
+        else:
+            collBranches = [str(cname) for cname in self.DataFrame.GetColumnNames() if ( (basecoll == str(cname)[:len(basecoll)]) and (str(cname) not in skip))]
         for b in collBranches:
             replacementName = b.replace(basecoll,name)
             if b == 'n'+basecoll:
