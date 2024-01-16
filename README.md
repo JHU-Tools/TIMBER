@@ -4,6 +4,50 @@
 TIMBER (Tree Interface for Making Binned Events with RDataFrame) is an easy-to-use and fast python analysis framework used to quickly process CMS data sets. 
 Default arguments assume the use of the NanoAOD format but any ROOT TTree can be processed.
 
+## Installation instructions for python3
+
+These instructions use python3 and CMSSW. The instructions below have been tested on lxplus8 (el8) and it should work on lxplus7 (slc7) as well. To make it work on lxplus9 (el9), the CMSSW version should be changed to CMSSW_13_2_10.
+
+```
+cmsrel CMSSW_12_3_5
+cd CMSSW_12_3_5
+cmsenv
+cd ..
+python3 -m virtualenv timber-env
+git clone git@github.com:JHU-Tools/TIMBER.git
+cd TIMBER/
+mkdir bin
+cd bin
+git clone git@github.com:fmtlib/fmt.git
+cd ../..
+```
+
+Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand. This version works for both CMSSW versions used for lxplus8 and lxplus9.
+
+Copy the whole multi-line string to the environment activation script
+
+```
+cat <<EOT >> timber-env/bin/activate
+
+export BOOSTPATH=/cvmfs/cms.cern.ch/slc7_amd64_gcc10/external/boost/1.75.0/lib
+if grep -q '\${BOOSTPATH}' <<< '\${LD_LIBRARY_PATH}'
+then
+  echo 'BOOSTPATH already on LD_LIBRARY_PATH'
+else
+  export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:\${BOOSTPATH}
+  echo 'BOOSTPATH added to PATH'
+fi
+EOT
+```
+
+This will activate the python3 environment, set a proper LD_LIBRARY_PATH for boost libraries and build the TIMBER binaries
+
+```
+source timber-env/bin/activate
+cd TIMBER
+source setup.sh
+```
+
 ## Quick install
 Despite the fact that Python 2.7 reached end-of-life on January 1st, 2020, it is still the dominant
 version used by CMS. If you need CMSSW (ex. for JME modules), Python 2.7 is recommended. Otherwise,
