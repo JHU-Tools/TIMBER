@@ -118,8 +118,8 @@ class analyzer(object):
                 self._addFile(self.fileName)
             else:	# opening .txt file containing line-separated .root filenames
                 fNames = self._parseTxt(self.fileName)
-        for f in ProgressBar(fNames, "Opening files: "):
-            self._addFile(f)
+                for f in ProgressBar(fNames, "Opening files: "):
+                    self._addFile(f)
 
         # Make base RDataFrame
         BaseDataFrame = ROOT.RDataFrame(self._eventsChain) 
