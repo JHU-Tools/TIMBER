@@ -6,7 +6,7 @@ Default arguments assume the use of the NanoAOD format but any ROOT TTree can be
 
 ## Installation instructions for python3
 
-These instructions use python3 and CMSSW. The instructions below have been tested on lxplus8 (el8) and it should work on lxplus7 (slc7) as well. To make it work on lxplus9 (el9), the CMSSW version should be changed to CMSSW_13_2_10.
+These instructions use python3 and CMSSW. The instructions below have been tested on el8 (lxplus and lpc). To make it work on lxplus9 (el9), the CMSSW version should be changed to CMSSW_13_2_10.
 
 ```
 cmsrel CMSSW_12_3_5
