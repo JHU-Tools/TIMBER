@@ -2,9 +2,10 @@ SOURCE_DIR=TIMBER/Framework/src/
 HEADER_DIR=TIMBER/Framework/include/
 EXT_DIR=TIMBER/Framework/ext/
 BIN_DIR=bin/libtimber/
+FMT_DIR=bin/fmt/include/
 
 CC=gcc
-INCLUDE=-I/usr/include/ -I bin/ -I./ `root-config --cflags --ldflags --glibs` -I/usr/include/ -I$(EXT_DIR)
+INCLUDE=-I/usr/include/ -I bin/ -I./ `root-config --cflags --ldflags --glibs` -I/usr/include/ -I$(EXT_DIR) -I$(FMT_DIR)
 LIBS=-lstdc++ -l boost_wserialization -l boost_filesystem -L bin/libarchive/lib/ -Wl,-rpath=bin/libarchive/lib/ -l archive
 CFLAGS=-g -Wno-attributes -fPIC -c
 CVMFS=/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/cms/cmssw/$(CMSSW_VERSION)
