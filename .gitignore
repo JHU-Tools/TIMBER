@@ -10,7 +10,10 @@ dist
 experimental/
 .vscode/
 examples/*.root
-bin/
+bin/restframes/src/*.o
+bin/fmt/
+bin/libarchive/
+bin/libtimber/
 root*
 .pytest_cache/
 TIMBER/data/Pileup/old/
