@@ -14,12 +14,10 @@ cd CMSSW_12_3_5
 cmsenv
 cd ..
 python3 -m virtualenv timber-env
-git clone git@github.com:JHU-Tools/TIMBER.git
-cd TIMBER/
-mkdir bin
-cd bin
+git clone --branch restframes_devel git@github.com:JHU-Tools/TIMBER.git
+cd TIMBER/bin/
 git clone git@github.com:fmtlib/fmt.git
-cd ../..
+cd ../../
 ```
 
 Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand. This version works for both CMSSW versions used for lxplus8 and lxplus9. If one does not wish to use CMSSW, boost libraries will have to be installed (and added to the MakeFile).
