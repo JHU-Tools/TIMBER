@@ -38,6 +38,14 @@ then
   rm -rf libarchive
 fi
 
+if [ ! -f bin/restframes/lib/librestframes.so ]
+then
+  echo "Building RestFrames"
+  cd bin/restframes/
+  make
+  cd ../../
+fi
+
 if [ ! -d "bin/libtimber" ]
 then
   make
