@@ -9,7 +9,7 @@ INCLUDE=-I/usr/include/ -I bin/ -I./ `root-config --cflags --ldflags --glibs` -I
 LIBS=-lstdc++ -l boost_wserialization -l boost_filesystem -L bin/libarchive/lib/ -Wl,-rpath=bin/libarchive/lib/ -l archive
 CFLAGS=-g -Wno-attributes -fPIC -c
 CVMFS=/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/cms/cmssw/$(CMSSW_VERSION)
-CMSSW=-I$(CVMFS)/src -I/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/external/boost/1.72.0-bcolbf/include -L/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/external/boost/1.72.0-bcolbf/lib -L$(CVMFS)/lib/$(SCRAM_ARCH)
+CMSSW=-I$(CVMFS)/src -I/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/include -L/cvmfs/cms.cern.ch/$(SCRAM_ARCH)/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/lib -L$(CVMFS)/lib/$(SCRAM_ARCH)
 
 CPP_FILES=$(wildcard $(SOURCE_DIR)*.cc $(EXT_DIR)*.cpp  $(EXT_DIR)*.cc)
 HEADERS=$(CPP_FILES:$(SOURCE_DIR)%.cc=$(HEADER_DIR)%.h)
