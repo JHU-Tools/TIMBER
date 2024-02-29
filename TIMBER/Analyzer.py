@@ -207,9 +207,9 @@ class analyzer(object):
         if self._eventsTreeName not in treeNames:
             print('WARNING: The following file does NOT contain an Events TTree, skipping.\n\tFile: {}'.format(f))
             pass
-        elif tempF.Get(self._eventsTreeName).GetEntry() != 0:
+        elif tempF.Get(self._eventsTreeName).GetEntry(0) != 0:
             self._eventsChain.Add(f)
-        elif tempF.Get(self._eventsTreeName).GetEntry() == 0:
+        elif tempF.Get(self._eventsTreeName).GetEntry(0) == 0:
             if self.skipEmpty:
                 print("WARNING: The following file contains an empty Events TTree, skipping. If you wish to add regardless, please call the analyzer with 'skipEmpty=False'\n\tFile: {}".format(f))
                 pass

@@ -22,9 +22,9 @@ SRCS = $(cdir)RFBase.cc  $(cdir)RFKey.cc  $(cdir)RFList.cc  $(cdir)RFLog.cc  $(c
          $(cdir)CombinedCBInvJigsaw.cc  $(cdir)MinMassDiffInvJigsaw.cc  $(cdir)MinMassesSqInvJigsaw.cc\
          $(cdir)MaxProbBreitWignerInvJigsaw.cc\
          $(cdir)MinMassesCombJigsaw.cc $(cdir)MinMassChi2CombJigsaw.cc $(cdir)MaxProbBreitWignerCombJigsaw.cc\
-         $(cdir)MinMassDiffCombJigsaw.cc $(cdir)MinMassesSqCombJigsaw.cc\
+         $(cdir)MinMassDiffCombJigsaw.cc $(cdir)MinMassesSqCombJigsaw.cc $(cdir)RestFramesHandler.cc \
 
-incrf = src/RestFrames/
+incrf = include/
 
 HDRS = $(incrf)RFKey.hh $(incrf)RFCharge.hh $(incrf)RFPlot.hh $(incrf)RFBase.hh $(incrf)RFLog.hh\
         $(incrf)RestFrame.hh $(incrf)ReconstructionFrame.hh $(incrf)GeneratorFrame.hh\
@@ -42,7 +42,7 @@ HDRS = $(incrf)RFKey.hh $(incrf)RFCharge.hh $(incrf)RFPlot.hh $(incrf)RFBase.hh 
         $(incrf)MinMassesCombJigsaw.hh $(incrf)MinMassChi2CombJigsaw.hh $(incrf)MaxProbBreitWignerCombJigsaw.hh\
         $(incrf)MinMassDiffCombJigsaw.hh $(incrf)MinMassesSqCombJigsaw.hh\
         $(incrf)TreePlot.hh $(incrf)TreePlotNode.hh $(incrf)TreePlotLink.hh\
-        $(incrf)HistPlotVar.hh $(incrf)HistPlotCategory.hh $(incrf)HistPlot.hh $(incrf)RFList.hh
+        $(incrf)HistPlotVar.hh $(incrf)HistPlotCategory.hh $(incrf)HistPlot.hh $(incrf)RFList.hh $(incrf)RestFramesHandler.hh \
 
 OBJS = $(SRCS:%.cc=%.o)
 
@@ -53,7 +53,7 @@ EXE = test_out
 
 all : librestframes
 
-librestframes : $(OBJS)
+librestframes : $(OBJS) | binlib
 	$(CXX) -shared -fPIC -o $(libdir)librestframes.so $(OBJS)
 
 depend : $(SRCS)
@@ -62,7 +62,10 @@ depend : $(SRCS)
 depend.mak :
 	touch $@
 
+binlib:
+	mkdir -p $(libdir)
+
 clean :
-	rm -f *.o depend.mak src/*.o 
+	rm -f *.o *.so $(libdir)*.so depend.mak $(cdir)*.o $(EXE)
 
 include depend.mak
