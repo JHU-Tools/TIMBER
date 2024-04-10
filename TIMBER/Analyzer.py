@@ -216,16 +216,16 @@ class analyzer(object):
         else:
             print("WARNING: The following file contains an empty Events TTree, adding to analyzer regardless. If you wish to skip, please call analyzer with 'skipEmpty=True' (default).\n\tFile: {}".format(f))
             self._eventsChain.Add(f)
-            if tempF.Get(self._runTreeName) != None:
-                self.RunChain.Add(f)
-                tempF.Close()
-            elif f.endswith(".txt"): 
-                txt_file = open(f,"r")
-                for l in txt_file.readlines():
-                    thisfile = l.strip()
-                    self._addFile(thisfile)
-            else:
-                raise Exception("File name extension not supported. Please provide a single or list of .root files or a .txt file with a line-separated list of .root files to chain together.")
+        if tempF.Get(self._runTreeName) != None:
+            self.RunChain.Add(f)
+            tempF.Close()
+        elif f.endswith(".txt"): 
+            txt_file = open(f,"r")
+            for l in txt_file.readlines():
+                thisfile = l.strip()
+                self._addFile(thisfile)
+        else:
+            raise Exception("File name extension not supported. Please provide a single or list of .root files or a .txt file with a line-separated list of .root files to chain together.")
 
     def Close(self):
         '''Safely deletes analyzer instance.
