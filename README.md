@@ -48,6 +48,13 @@ cd TIMBER
 source setup.sh
 ```
 
+Tip: Add the lines below to the top of `timber-env/bin/activate` script. With this, one can skip doing `cmsenv` every time after opening a new shell and just activate the environment instead.
+```
+cd CMSSW_12_3_5
+cmsenv
+cd ..
+```
+
 ## Quick install
 Despite the fact that Python 2.7 reached end-of-life on January 1st, 2020, it is still the dominant
 version used by CMS. If you need CMSSW (ex. for JME modules), Python 2.7 is recommended. Otherwise,
