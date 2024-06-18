@@ -19,9 +19,9 @@ file_name = 'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL18NanoAODv9/Tpri
 
 # Import the C++
 CompileCpp('TIMBER/Framework/include/common.h') # Compile (via gInterpreter) commonly used c++ code
-CompileCpp('TIMBER/Framework/include/CleanJet.h') # Compile Our vlq c++ code
-CompileCpp('TIMBER/Framework/include/Utilities.h') # Compile Our vlq c++ code
-CompileCpp('TIMBER/Framework/include/Corrlib_funcs.h') 
+CompileCpp('TIMBER/Framework/Tprime1lep/cleanjet.cc') # Compile Our vlq c++ code
+CompileCpp('TIMBER/Framework/Tprime1lep/utilities.cc') # Compile Our vlq c++ code
+CompileCpp('TIMBER/Framework/Tprime1lep/corrlib_funcs.cc') 
 
 handler_name = 'Tprime_handler.cc'
 class_name = 'Tprime_RestFrames_Container'
@@ -51,7 +51,7 @@ ROOT.gInterpreter.Declare('auto csetPU = correction::CorrectionSet::from_file("j
 
 # Golden JSON Data
 a.Define("corrPU", 'csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON")')
-a.Define("PileupWeights", "Corrlib_funcs::pufunc(corrPU, Pileup_nTrueInt)")
+a.Define("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------ MET Cuts ------------------
 metCuts = CutGroup('METCuts')
@@ -76,8 +76,8 @@ lVars.Add("TElectron_pt", "Electron_pt[TightEl == true]")
 lVars.Add("TElectron_eta", "Electron_eta[TightEl == true]")
 lVars.Add("TElectron_phi", "Electron_phi[TightEl == true]")
 lVars.Add("TElectron_mass", "Electron_mass[TightEl == true]")
-lVars.Add("TMuon_P4", "Utilities::fVectorConstructor(TMuon_pt,TMuon_eta,TMuon_phi,TMuon_mass)")
-lVars.Add("TElectron_P4", "Utilities::fVectorConstructor(TElectron_pt,TElectron_eta,TElectron_phi,TElectron_mass)")
+lVars.Add("TMuon_P4", "fVectorConstructor(TMuon_pt,TMuon_eta,TMuon_phi,TMuon_mass)")
+lVars.Add("TElectron_P4", "fVectorConstructor(TElectron_pt,TElectron_eta,TElectron_phi,TElectron_mass)")
 lVars.Add("TMuon_jetIdx", "Muon_jetIdx[TightMu == true]")
 lVars.Add("TElectron_jetIdx", "Electron_jetIdx[TightEl == true]")
         # select lepton
@@ -88,7 +88,7 @@ lVars.Add("isEl","nElectron > 0 && nTightEl == 1 && (nMuon == 0 || nTightMu == 0
 lCuts = CutGroup('LeptonCuts')
 lCuts.Add("Event is either muon or electron", "isMu || isEl")
         # assign lepton
-lVars.Add("assignleps","CleanJet::assign_leps(isMu,isEl,TightMu,TightEl,Muon_pt,Muon_eta,Muon_phi,Muon_mass,Muon_miniPFRelIso_all,Electron_pt,Electron_eta,Electron_phi,Electron_mass,Electron_miniPFRelIso_all)")
+lVars.Add("assignleps","assign_leps(isMu,isEl,TightMu,TightEl,Muon_pt,Muon_eta,Muon_phi,Muon_mass,Muon_miniPFRelIso_all,Electron_pt,Electron_eta,Electron_phi,Electron_mass,Electron_miniPFRelIso_all)")
 lVars.Add("lepton_pt","assignleps[0]")
 lVars.Add("lepton_eta","assignleps[1]")	
 lVars.Add("lepton_phi","assignleps[2]")
@@ -98,21 +98,21 @@ lVars.Add("lepton_miniIso","assignleps[4]")
 # ------------------ Jet Cleaning Cuts ------------------
 jVars = VarGroup('JetCleaningVars')
 
-jVars.Add("Jet_P4", "Utilities::fVectorConstructor(Jet_pt,Jet_eta,Jet_phi,Jet_mass)")
-jVars.Add("FatJet_P4", "Utilities::fVectorConstructor(FatJet_pt,FatJet_eta,FatJet_phi,FatJet_mass)")
+jVars.Add("Jet_P4", "fVectorConstructor(Jet_pt,Jet_eta,Jet_phi,Jet_mass)")
+jVars.Add("FatJet_P4", "fVectorConstructor(FatJet_pt,FatJet_eta,FatJet_phi,FatJet_mass)")
 jVars.Add("Jet_EmEF","Jet_neEmEF + Jet_chEmEF")
 #jVars.Add("DummyZero","float(0.0)")
 
-#jVars.Add("cleanedJets", "CleanJet::cleanJets(Jet_P4,Jet_rawFactor,TMuon_P4,TMuon_jetIdx,TElectron_P4,TElectron_jetIdx)")
+#jVars.Add("cleanedJets", "cleanJets(Jet_P4,Jet_rawFactor,TMuon_P4,TMuon_jetIdx,TElectron_P4,TElectron_jetIdx)")
 
-#cleanerJet = ROOT.CleanJet.cleanJets(ROOT.Jet_P4,ROOT.Jet_rawFactor,ROOT.TMuon_P4,ROOT.TMuon_jetIdx,ROOT.TElectron_P4,ROOT.TElectron_jetIdx)
+#cleanerJet = ROOT.cleanJets(ROOT.Jet_P4,ROOT.Jet_rawFactor,ROOT.TMuon_P4,ROOT.TMuon_jetIdx,ROOT.TElectron_P4,ROOT.TElectron_jetIdx)
 
 #print(jVars["cleanedJets[0]"])
 #print(cleanerJet.size)
 
-#jVars.Add("cleanedJets", "CleanJet::cleanJets(Jet_P4,Jet_rawFactor,Jet_muonSubtrFactor,Jet_area,Jet_EmEF,Jet_jetId,Jet_P4,Jet_jetId,SMuon_P4,SMuon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,DummyZero,DummyZero") # muon and EM factors unused in this call, args 6-7 are dummies
-#jVars.Add("cleanMets", "CleanJet::cleanJets(Jet_P4,Jet_rawFactor,Jet_muonSubtrFactor,Jet_area,Jet_EmEF,Jet_jetId,Jet_P4,Jet_jetId,Muon_P4,Muon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,RawMET_pt,RawMET_phi") # lepton args unused in this call, args 6-7 are dummies
-#jVars.Add("cleanFatJets", "CleanJet::cleanJets(FatJet_P4,FatJet_rawFactor,FatJet_rawFactor,FatJet_area,FatJet_area,FatJet_jetId,FatJet_P4,FatJet_jetId,SMuon_P4,SMuon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,DummyZero,DummyZero") # args 2, 4, 6, 7 are dummies
+#jVars.Add("cleanedJets", "cleanJets(Jet_P4,Jet_rawFactor,Jet_muonSubtrFactor,Jet_area,Jet_EmEF,Jet_jetId,Jet_P4,Jet_jetId,SMuon_P4,SMuon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,DummyZero,DummyZero") # muon and EM factors unused in this call, args 6-7 are dummies
+#jVars.Add("cleanMets", "cleanJets(Jet_P4,Jet_rawFactor,Jet_muonSubtrFactor,Jet_area,Jet_EmEF,Jet_jetId,Jet_P4,Jet_jetId,Muon_P4,Muon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,RawMET_pt,RawMET_phi") # lepton args unused in this call, args 6-7 are dummies
+#jVars.Add("cleanFatJets", "cleanJets(FatJet_P4,FatJet_rawFactor,FatJet_rawFactor,FatJet_area,FatJet_area,FatJet_jetId,FatJet_P4,FatJet_jetId,SMuon_P4,SMuon_jetIdx,SElectron_P4,SElectron_jetIdx,fixedGridRhoFastjetAll,DummyZero,DummyZero") # args 2, 4, 6, 7 are dummies
 #jVars.Add("cleanedJets", cleanJets, {"Jet_P4","Jet_rawFactor","Jet_muonSubtrFactor","Jet_area","Jet_EmEF","Jet_jetId","Jet_P4","Jet_jetId","SMuon_P4","SMuon_jetIdx","SElectron_P4","SElectron_jetIdx","fixedGridRhoFastjetAll","DummyZero","DummyZero"}) # muon and EM factors unused in this call, args 6-7 are dummies
 #jVars.Add("cleanMets", cleanJets, {"Jet_P4","Jet_rawFactor","Jet_muonSubtrFactor","Jet_area","Jet_EmEF","Jet_jetId","Jet_P4","Jet_jetId","Muon_P4","Muon_jetIdx","SElectron_P4","SElectron_jetIdx","fixedGridRhoFastjetAll","RawMET_pt","RawMET_phi"}) # lepton args unused in this call, args 6-7 are dummies
 #jVars.Add("cleanFatJets", cleanJets, {"FatJet_P4","FatJet_rawFactor","FatJet_rawFactor","FatJet_area","FatJet_area","FatJet_jetId","FatJet_P4","FatJet_jetId","SMuon_P4","SMuon_jetIdx","SElectron_P4","SElectron_jetIdx","fixedGridRhoFastjetAll","DummyZero","DummyZero"}) # args 2, 4, 6, 7 are dummies
@@ -130,8 +130,8 @@ jVars.Add("cleanedJet_eta", "cleanedJets[1]")
 jVars.Add("cleanedJet_phi", "cleanedJets[2]")
 jVars.Add("cleanedJet_mass", "cleanedJets[3]")
 jVars.Add("cleanedJet_rawFactor", "cleanedJets[4]")
-jVars.Add("DR_lepJets","Utilities::DeltaR_VecAndFloat(cleanedJet_eta,cleanedJet_phi,lepton_eta,lepton_phi)")
-jVars.Add("ptrel_lepJets","Utilities::ptRel(cleanedJet_pt,cleanedJet_eta,cleanedJet_phi,cleanedJet_mass,lepton_pt,lepton_eta,lepton_phi,lepton_mass)") 
+jVars.Add("DR_lepJets","DeltaR_VecAndFloat(cleanedJet_eta,cleanedJet_phi,lepton_eta,lepton_phi)")
+jVars.Add("ptrel_lepJets","ptRel(cleanedJet_pt,cleanedJet_eta,cleanedJet_phi,cleanedJet_mass,lepton_pt,lepton_eta,lepton_phi,lepton_mass)") 
 jVars.Add("goodcleanJets", "cleanedJet_pt > 30 && abs(cleanedJet_eta) < 2.4 && Jet_jetId > 1 && (DR_lepJets > 0.4 || ptrel_lepJets > 20)")
 jVars.Add("NJets_central", "(int) Sum(goodcleanJets)")
 jVars.Add("gcJet_pt", "cleanedJet_pt[goodcleanJets == true]")
@@ -142,8 +142,8 @@ jVars.Add("gcJet_DeepFlav", "Jet_btagDeepFlavB[goodcleanJets == true]")
 jVars.Add("gcJet_DeepFlavM", "gcJet_DeepFlav > 0.2783")
 jVars.Add("NJets_DeepFlavM", "(int) Sum(gcJet_DeepFlavM)")
 '''
-jVars.Add("DR_lepFatJets","Utilities::DeltaR_VecAndFloat(FatJet_eta,FatJet_phi,lepton_eta,lepton_phi)")
-jVars.Add("ptrel_lepFatJets","Utilities::ptRel(FatJet_pt,FatJet_eta,FatJet_phi,FatJet_mass,lepton_pt,lepton_eta,lepton_phi,lepton_mass)") 
+jVars.Add("DR_lepFatJets","DeltaR_VecAndFloat(FatJet_eta,FatJet_phi,lepton_eta,lepton_phi)")
+jVars.Add("ptrel_lepFatJets","ptRel(FatJet_pt,FatJet_eta,FatJet_phi,FatJet_mass,lepton_pt,lepton_eta,lepton_phi,lepton_mass)") 
 jVars.Add("goodcleanFatJets", "FatJet_pt > 200 && abs(FatJet_eta) < 2.4 && FatJet_jetId > 1 && (DR_lepFatJets > 0.8 || ptrel_lepFatJets > 20)")
 jVars.Add("NFatJets_central", "(int) Sum(goodcleanFatJets)")
 jVars.Add("gcFatJet_pt", "FatJet_pt[goodcleanFatJets == true]")
@@ -167,7 +167,7 @@ ppaVars = VarGroup('postPreSelectionAnalysisVars')
 #TODO think.  Do we need the next one?  This one requires a lot of code from 
 #../../../RJRanalysis/CMSSW_11_0_0/src/RJR/step1RDF_forLJMet.cpp
 #ppaVars.Add("decayMode_or_genTTbarMass",decayModeSelection_genTTbarMassCalc,{"nGenPart","GenPart_pdgId","GenPart_mass", "GenPart_pt","GenPart_phi","GenPart_eta", "GenPart_genPartIdxMother","GenPart_status"})
-ppaVars.Add("lepton_lv","Utilities::lvConstructor(lepton_pt,lepton_eta,lepton_phi,lepton_mass)")
+ppaVars.Add("lepton_lv","lvConstructor(lepton_pt,lepton_eta,lepton_phi,lepton_mass)")
 ppaVars.Add("AK4HTpMETpLepPt","AK4HT + lepton_pt + MET_pt") 
 ppaVars.Add("dnnJ","FatJet_deepTag_QCDothers[goodcleanFatJets == true]")	
 ppaVars.Add("int_dnnT","(FatJet_deepTag_TvsQCD * FatJet_deepTag_QCD) / (1 - FatJet_deepTag_TvsQCD)") 
@@ -198,7 +198,7 @@ ppaVars.Add("minDR_leadAK8otherAK8","minDR_ptRel_lead_lepAK8[2]")
 ppaVars.Add("minDR_ptRel_lead_lepJets","minDR_ptRel_lead_calc(gcJet_pt,gcJet_eta,gcJet_phi,gcJet_mass,lepton_lv)")
 ppaVars.Add("minDR_lepJet","minDR_ptRel_lead_lepJets[0]")		
 ppaVars.Add("ptRel_lepJet","minDR_ptRel_lead_lepJets[1]")		
-ppaVars.Add("DR_lepAK8s","Utilities::DeltaR_VecAndFloat(gcFatJet_eta,gcFatJet_phi,lepton_eta,lepton_phi)")
+ppaVars.Add("DR_lepAK8s","DeltaR_VecAndFloat(gcFatJet_eta,gcFatJet_phi,lepton_eta,lepton_phi)")
 ppaVars.Add("W_lv","lpNu_WCalc(MET_pt,MET_phi,lepton_lv)") 
 #ppaVars.Add("minMlj",minMleppJet_calc,{"gcJet_pt","gcJet_eta","gcJet_phi","gcJet_mass", "lepton_lv","gcJet_DeepFlav"})				
 ppaVars.Add("W_dRLep","dR_Wt_Calc(W_lv,lepton_lv)")			
