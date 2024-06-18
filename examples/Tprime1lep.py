@@ -38,19 +38,14 @@ a = analyzer(file_name)
 print('==========================INITIALIZED ANALYZER========================')
 
 # Get correctionsLib
-#yrstr = "2018"
-#yr = "18"
-ROOT.gInterpreter.Declare('string yrstr = "2018"; string yr = "18"; ')
-ROOT.gInterpreter.Declare('auto csetPU = correction::CorrectionSet::from_file("jsonpog-integration/POG/LUM/"+yrstr+"_UL/puWeights.json");')
-#ROOT.gInterpreter.Declare('auto corrPU = csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON");')
-#corrPUint = ROOT.corrPU
-
-#print(ROOT.addressof(corrPUint)
-
-#ROOT.gInterpreter.Declare('auto pufunc = [corrPU](const float &numTrueInt){ RVec<double> pu = {corrPU->evaluate({numTrueInt, "nominal"}), corrPU->evaluate({numTrueInt, "up"}), corrPU->evaluate({numTrueInt, "down"})}; return pu; };')
+ROOT.gInterpreter.Declare("""
+string yrstr = "2018"; 
+string yr = "18"; 
+auto csetPU = correction::CorrectionSet::from_file("jsonpog-integration/POG/LUM/"+yrstr+"_UL/puWeights.json");
+auto corrPU = csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON");
+""")
 
 # Golden JSON Data
-a.Define("corrPU", 'csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON")')
 a.Define("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------ MET Cuts ------------------
