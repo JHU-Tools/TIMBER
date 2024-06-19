@@ -272,18 +272,49 @@ a.Apply(lCuts)
 
 a.Apply(jVars) ## where problem is
 
-snapshotOptions = ROOT.RDF.RSnapshotOptions.RSnapshotOptions() #a.DataFrame.RSnapshotOptions()
-snapshotOptions.fLazy = False
-
-# self.ActiveNode.Snapshot(columns,outfilename,treename,lazy,openOption)
-#a.Snapshot({"cleanedJets", "cleanedJet_pt"}, "newfile.root", "VarsFilters", 0, 1)
-#a.Snapshot("cleanedJets", newTree, "VarsFilters", 0, 1)
-#columns = ["cleanedJets", "cleanedJet_pt"]
-columns = ["PileupWeights"]
-
-a.DataFrame.Snapshot("VarFilters", "newfile.root", columns, snapshotOptions ) #.fLazy)
 a.Apply(jCuts)
 a.Apply(rframeVars)
+
+#snapshotOptions = ROOT.RDF.RSnapshotOptions.RSnapshotOptions() #a.DataFrame.RSnapshotOptions()
+#snapshotOptions.fLazy = False
+#columns = a.GetColumnNames()
+#a.DataFrame.Snapshot("VarFilters", "newfile.root", columns, snapshotOptions ) #.fLazy)
+
+
+allColumns = a.GetColumnNames()
+columns = [] #allColumns
+
+#i = 0
+for col in allColumns:
+    #i = i + 1
+    #if i > 49: continue
+    if col == "run": break # lets just skip all the original branches?
+
+    if ("P4" in col) or ("cleanJets" in col) or ("cleanFatJets" in col) or ("cleanMets" in col) or ("Dummy" in col): continue 
+    if ("LHE" in col) and ("Weight" not in col) and (col != "LHE_HT") and (col != "LHE_Vpt") and (col != "gcHTCorr_WjetLHE"): continue
+    if col.startswith("Muon") and ("_tightId" not in col) and ("_isPF" not in col) and ("tunep" not in col) and ("genPartFlav" not in col): continue
+    if col.startswith("Electron") and ("genPartFlav" not in col): continue
+    if col.startswith("Jet") and ("rawFactor" not in col): continue
+    if col.startswith("FatJet") and ("rawFactor" not in col): continue
+    if col.startswith("PPS") or col.startswith("Proton") or col.startswith("L1_"): continue
+    if col.startswith("Gen") or col.startswith("Soft") or col.startswith("fixed"): continue
+    if col.startswith("Sub") or col.startswith("RawPuppi") or col.startswith("Calo") or col.startswith("Chs"): continue
+    if col.startswith("Corr") or col.startswith("Fsr") or col.startswith("Iso") or col.startswith("Tau"): continue
+    if col.startswith("SV") or col.startswith("Puppi") or col.startswith("Photon") or col.startswith("Low"): continue
+    if col.startswith("HLT") or col.startswith("HT") or col.startswith("boosted") or col.startswith("Deep"): continue
+    if col.startswith("Flag") or col == "Bprime_gen_info" or col == "t_gen_info" or col == "W_gen_info" or col == "metxyoutput": continue
+    if col == "assignleps" or col == "pnetoutput" or col == "t_output" or col == "Bprime_output" or col.startswith("Other"): continue
+    if col.startswith("PS") or col.startswith("PV") or col.startswith("Tk") or col.startswith("Trig"): continue
+    if col.startswith("nCorr") or col.startswith("nFsr"): continue
+    if col.startswith("nGen") or col.startswith("nIso") or col.startswith("nLow"): continue
+    if col.startswith("nOther") or col.startswith("nPS") or col.startswith("nPhoton"): continue
+    if col.startswith("nSV") or col.startswith("nSub") or col.startswith("nTau") or col.startswith("nTrig"): continue
+    if col.startswith("nboosted"): continue
+    
+    columns.append(col)
+
+#TODO think do we really want to recreate this everytime?  or just create?
+a.Snapshot(columns, "out_Tprime.root", "Events", lazy=False, openOption='RECREATE', saveRunChain=False)
 
 
 myHist1 = a.GetActiveNode().DataFrame.Histo1D(('m_T_lab', 'Mass of T lab', 25, 500, 2000), 'VLQ_mass_T')
@@ -301,10 +332,9 @@ myHist2a.Write()
 myHist3.Write()
 myHist4.Write()
 
-
 out.Close()
 
 a.PrintNodeTree('test_Tprime_out.png')
 
-
+a.Close()
 
