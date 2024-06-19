@@ -17,10 +17,13 @@ sys.path.append('../../../')
 num_threads = 1
 file_name = 'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL18NanoAODv9/TprimeTprime_M-1500_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/40000/447AD74F-034B-FA42-AD05-CD476A98C43D.root'
 
+year = sys.argv[1] # first command line argument
+
 # Import the C++
 CompileCpp('TIMBER/Framework/include/common.h') # Compile (via gInterpreter) commonly used c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/cleanjet.cc') # Compile Our vlq c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/utilities.cc') # Compile Our vlq c++ code
+CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.h')
 CompileCpp('TIMBER/Framework/Tprime1lep/corrlib_funcs.cc') 
 
 handler_name = 'Tprime_handler.cc'
@@ -37,6 +40,24 @@ a = analyzer(file_name)
 
 print('==========================INITIALIZED ANALYZER========================')
 
+ROOT.gInterpreter.Declare('string year = "' + year + '";')
+
+debug = False
+
+#TODO isMC? isVV? isSig? etc.
+isMC = False
+
+# ------------------ Golden JSON Data ------------------
+jsonfile = ""
+if (year == "2016" or year == "2016APV"): jsonfile = "Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
+elif (year == "2017"): jsonfile = "Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
+elif (year == "2018"): jsonfile = "Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
+else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expected 2016, 2016APV, 2017, or 2018. Got: {year}\n')
+ROOT.gInterpreter.Declare("""
+const auto myLumiMask = lumiMask::fromJSON(\" """ + jsonfile + """\");
+//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
+""")
+
 # Get correctionsLib
 ROOT.gInterpreter.Declare("""
 string yrstr = "2018"; 
@@ -45,14 +66,22 @@ auto csetPU = correction::CorrectionSet::from_file("jsonpog-integration/POG/LUM/
 auto corrPU = csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON");
 """)
 
-# Golden JSON Data
-a.Define("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------ MET Cuts ------------------
 metCuts = CutGroup('METCuts')
 metCuts.Add('MET Filters', 'Flag_EcalDeadCellTriggerPrimitiveFilter == 1 && Flag_goodVertices == 1 && Flag_HBHENoiseFilter == 1 && Flag_HBHENoiseIsoFilter == 1 && Flag_eeBadScFilter == 1 && Flag_globalSuperTightHalo2016Filter == 1 && Flag_BadPFMuonFilter == 1 && Flag_ecalBadCalibFilter == 1')
 metCuts.Add('Pass MET > 50', 'MET_pt > 50')
 metCuts.Add('Event has jets',        'nJet > 0 && nFatJet > 0') # need jets 
+
+# ------------------ Golden JSON (Data) || GEN Info (MC) ------------------
+gjsonVars = VarGroup('GoldenJsonVars')
+gjsonCuts = CutGroup('GoldenJsonCuts')
+if not isMC:
+    gjsonVars.Add("passesJSON", "goldenjson(myLumiMask, run, luminosityBlock)")
+    gjsonCuts.Add("Data passes Golden JSON", "passesJSON == 1") 
+
+        # this was originally in the else block:
+gjsonVars.Add("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------ Letpon Cuts ------------------
 lVars = VarGroup('LeptonVars')
@@ -265,15 +294,13 @@ rframeVars.Add('VLQ_mass_avg', '(VLQ_mass_T+VLQ_mass_Tbar)*0.5')
 # -------------------------------------
 
 
-#nodeToPlot = a.Apply([metCuts, lVars, lCuts, jVars, jCuts, ppaVars, rframeVars])
-nodeToPlot = a.Apply(metCuts)
-a.Apply(lVars)
-a.Apply(lCuts)
-
-a.Apply(jVars) ## where problem is
-
-a.Apply(jCuts)
-a.Apply(rframeVars)
+nodeToPlot = a.Apply([metCuts, gjsonVars, gjsonCuts, lVars, lCuts, jVars, jCuts, rframeVars])
+#nodeToPlot = a.Apply(metCuts)
+#a.Apply(lVars)
+#a.Apply(lCuts)
+#a.Apply(jVars) ## where problem is
+#a.Apply(jCuts)
+#a.Apply(rframeVars)
 
 #snapshotOptions = ROOT.RDF.RSnapshotOptions.RSnapshotOptions() #a.DataFrame.RSnapshotOptions()
 #snapshotOptions.fLazy = False
