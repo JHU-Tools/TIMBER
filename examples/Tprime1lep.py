@@ -23,7 +23,9 @@ year = sys.argv[1] # first command line argument
 CompileCpp('TIMBER/Framework/include/common.h') # Compile (via gInterpreter) commonly used c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/cleanjet.cc') # Compile Our vlq c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/utilities.cc') # Compile Our vlq c++ code
+#gROOT.ProcessLine('#include "lumiMask.h"')
 CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.h')
+#CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.cc')
 CompileCpp('TIMBER/Framework/Tprime1lep/corrlib_funcs.cc') 
 
 handler_name = 'Tprime_handler.cc'
@@ -54,16 +56,34 @@ elif (year == "2017"): jsonfile = "Cert_294927-306462_13TeV_UL2017_Collisions17_
 elif (year == "2018"): jsonfile = "Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
 else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expected 2016, 2016APV, 2017, or 2018. Got: {year}\n')
 ROOT.gInterpreter.Declare("""
-const auto myLumiMask = lumiMask::fromJSON(\" """ + jsonfile + """\");
+const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
 //  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
 """)
 
-# Get correctionsLib
+# ------------------ correctionsLib corrections ------------------
+mutrig = "TkMu50";
+if (year == "2016APV"): deepjetL = "0.0508"; yrstr = "2016preVFP"; yr = "16"; jecyr = "UL16APV"; jeryr = "Summer20UL16APV_JRV3"; jecver = "V7"
+elif (year == "2016"): deepjetL = "0.0480"; yrstr = "2016postVFP"; yr = "16"; jecyr = "UL16"; jeryr = "Summer20UL16_JRV3"; jecver = "V7"
+elif (year == "2017"): mutrig = "OldMu100_or_TkMu100"; deepjetL = "0.0532"; yrstr = "2017"; yr = "17"; jecyr = "UL17"; jeryr = "Summer19UL17_JRV2"; jecver = "V5"
+elif (year == "2018"): mutrig = "OldMu100_or_TkMu100"; deepjetL = "0.0490"; yrstr = "2018"; yr = "18"; jecyr = "UL18"; jeryr = "Summer19UL18_JRV2"; jecver = "V5"
+else: print(f'ERROR: Can\'t parse the year to assign correctionLib json files. Expected 2016, 2016APV, 2017, or 2018. Got: {year}\n')
+
 ROOT.gInterpreter.Declare("""
-string yrstr = "2018"; 
-string yr = "18"; 
+string yrstr = \""""+yrstr+"""\"; string yr = \""""+yr+"""\"; string jecyr = \""""+jecyr+"""\"; string jeryr = \""""+jeryr+"""\"; string jecver = \""""+jecver+"""\"; string mutrig = \""""+mutrig+"""\";
+float deepjetL = """+deepjetL+""";
+""")
+
+
+ROOT.gInterpreter.Declare("""
 auto csetPU = correction::CorrectionSet::from_file("jsonpog-integration/POG/LUM/"+yrstr+"_UL/puWeights.json");
+auto electroncorrset = correction::CorrectionSet::from_file("jsonpog-integration/POG/EGM/"+yrstr+"_UL/electron.json");
+auto muoncorrset = correction::CorrectionSet::from_file("jsonpog-integration/POG/MUO/"+yrstr+"_UL/muon_Z.json");
+
 auto corrPU = csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON");
+auto electroncorr = electroncorrset->at("UL-Electron-ID-SF"); 
+auto muoncorr = muoncorrset->at("NUM_TrackerMuons_DEN_genTracks");
+auto muonidcorr = muoncorrset->at("NUM_MediumID_DEN_TrackerMuons");
+auto muonhltcorr = muoncorrset->at("NUM_Mu50_or_"+mutrig+"_DEN_CutBasedIdGlobalHighPt_and_TkIsoLoose"); 
 """)
 
 
@@ -76,9 +96,9 @@ metCuts.Add('Event has jets',        'nJet > 0 && nFatJet > 0') # need jets
 # ------------------ Golden JSON (Data) || GEN Info (MC) ------------------
 gjsonVars = VarGroup('GoldenJsonVars')
 gjsonCuts = CutGroup('GoldenJsonCuts')
-if not isMC:
-    gjsonVars.Add("passesJSON", "goldenjson(myLumiMask, run, luminosityBlock)")
-    gjsonCuts.Add("Data passes Golden JSON", "passesJSON == 1") 
+#if not isMC:
+ #   gjsonVars.Add("passesJSON", "goldenjson(myLumiMask, run, luminosityBlock)")
+ #   gjsonCuts.Add("Data passes Golden JSON", "passesJSON == 1") 
 
         # this was originally in the else block:
 gjsonVars.Add("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
@@ -184,6 +204,11 @@ jCuts = CutGroup('JetCuts')
 jCuts.Add('3 AK8s Pass', 'NFatJets_central > 2')    # need to ensure three jets exist
 
 #jCuts.Add('3 AK8s Pass', 'nFatJet > 2')
+
+# ------------------ Add scale factors and MC jet-based calcs ------------------
+#TODO could be a fatJetVar group
+#if isMC
+jVars.Add("leptonRecoSF", "recofunc(electroncorr, muoncorr, yrstr, lepton_pt, lepton_eta, isEl)")
 
 
 # ------------------ Post Preselection Analysis ------------------
