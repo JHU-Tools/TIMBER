@@ -61,6 +61,7 @@ else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expecte
 #const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
 #//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
 #""")
+A
 
 # ------------------ Self-derived corrections ------------------
 
@@ -126,8 +127,8 @@ gjsonVars.Add("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------ Letpon Cuts ------------------
 lVars = VarGroup('LeptonVars')
-lVars.Add("TightMu", "abs(Muon_eta) < 2.4 && Muon_tightId == true && Muon_miniIsoId >= 3 && Muon_pt > 30")
-lVars.Add("TightEl", "abs(Electron_eta) < 2.5 && Electron_mvaFall17V2noIso_WP90 == true && Electron_miniPFRelIso_all < 0.1 && Electron_pt > 30")
+lVars.Add("TightMu", "abs(Muon_eta) < 2.4 && Muon_tightId == true && Muon_miniIsoId >= 3 && Muon_pt > 50")
+lVars.Add("TightEl", "abs(Electron_eta) < 2.5 && Electron_mvaFall17V2noIso_WP90 == true && Electron_miniPFRelIso_all < 0.1 && Electron_pt > 50")
 lVars.Add("VetoMu", "abs(Muon_eta) < 2.4 && Muon_looseId == true && Muon_miniIsoId >= 1 && Muon_pt > 10 && TightMu == false")
 lVars.Add("VetoEl", "abs(Electron_eta) < 2.5 && Electron_mvaFall17V2noIso_WPL == true && Electron_miniPFRelIso_all < 0.4 && Electron_pt > 10 && TightEl == false")
 lVars.Add("nVetoLep", "Sum(VetoMu)+Sum(VetoEl)")

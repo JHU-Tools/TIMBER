@@ -4,6 +4,8 @@
 // --------------------------------------------------------
 // 		    PILE UP FXN
 // --------------------------------------------------------
+#include <stdexcept>
+
 using namespace ROOT::VecOps;
 using namespace std;
 
@@ -43,19 +45,12 @@ RVec<float> idfunc(correction::Correction::Ref& muonidcorr, vector<float> &elid_
 {
   RVec<float> id;
   if(isEl > 0){
-  //  id = {1.0,1.0,1.0};
     int ptbin = (std::upper_bound(elid_pts.begin(), elid_pts.end(), pt) - elid_pts.begin())-1;
     int etabin = (std::upper_bound(elid_etas.begin(), elid_etas.end(), eta) - elid_etas.begin())-1;
-    //id = {,,}
-   // id = {elecidsfs[ptbin][etabin], elecidsfs[ptbin][etabin] + elecidsfuncs[ptbin][etabin], elecidsfs[ptbin][etabin] - elecidsfuncs[ptbin][etabin]};
     
-    //std::cout << id.size();	
-   // id = {(double) elecidsfs[ptbin][etabin], (double) elecidsfuncs[ptbin][etabin]};
-    //id = {elecidsfs[ptbin][etabin], elecidsfuncs[ptbin][etabin]};
-    id = {elecidsfs[0][0], elecidsfuncs[0][0]};
-    
-    //std::cout << id.size();    
-  }else{  //TODO try make everything be a float static_cast (float) google it.
+    id = {elecidsfs[ptbin][etabin], elecidsfuncs[ptbin][etabin]}; //PTL
+     
+  }else{  
     id = {static_cast<float>(muonidcorr->evaluate({yrstr+"_UL",abs(eta),pt,"sf"})), 
       static_cast<float>(muonidcorr->evaluate({yrstr+"_UL",abs(eta),pt,"systup"})), 
       static_cast<float>(muonidcorr->evaluate({yrstr+"_UL",abs(eta),pt,"systdown"}))};
