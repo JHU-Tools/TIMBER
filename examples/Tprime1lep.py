@@ -23,9 +23,10 @@ year = sys.argv[1] # first command line argument
 CompileCpp('TIMBER/Framework/include/common.h') # Compile (via gInterpreter) commonly used c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/cleanjet.cc') # Compile Our vlq c++ code
 CompileCpp('TIMBER/Framework/Tprime1lep/utilities.cc') # Compile Our vlq c++ code
-#gROOT.ProcessLine('#include "lumiMask.h"')
-CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.h')
+#ROOT.gInterpreter.ProcessLine('#include "../TIMBER/Framework/Tprime1lep/lumiMask.h"')
+#CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.h')
 #CompileCpp('TIMBER/Framework/Tprime1lep/lumiMask.cc')
+CompileCpp('TIMBER/Framework/Tprime1lep/selfDerived_corrs.cc')
 CompileCpp('TIMBER/Framework/Tprime1lep/corrlib_funcs.cc') 
 
 handler_name = 'Tprime_handler.cc'
@@ -50,15 +51,30 @@ debug = False
 isMC = False
 
 # ------------------ Golden JSON Data ------------------
+# change the jsonfile path to somewhere they have it in TIMBER
 jsonfile = ""
 if (year == "2016" or year == "2016APV"): jsonfile = "Cert_271036-284044_13TeV_Legacy2016_Collisions16_JSON.txt"
 elif (year == "2017"): jsonfile = "Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt"
 elif (year == "2018"): jsonfile = "Cert_314472-325175_13TeV_Legacy2018_Collisions18_JSON.txt"
 else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expected 2016, 2016APV, 2017, or 2018. Got: {year}\n')
-ROOT.gInterpreter.Declare("""
-const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
-//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
+#ROOT.gInterpreter.Declare("""
+#const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
+#//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
+#""")
+
+# ------------------ Self-derived corrections ------------------
+
+#TODO more things here
+
+    # Lepton scale factors not in correctionLib
+ROOT.gInterpreter.ProcessLine("""
+initialize(year);
 """)
+#can do things like this inside:   include <iostream>
+#using namespace std; 
+#std::cout << elid_pts.size() << elid_pts.at(2); //TODO remove
+#std::cout << elecidsfs.size() << elecidsfs.at(0).size() << elecidsfs.at(0).at(0) << endl;
+#""")
 
 # ------------------ correctionsLib corrections ------------------
 mutrig = "TkMu50";
@@ -203,13 +219,12 @@ jCuts = CutGroup('JetCuts')
 #jCuts.Add('AK4 HT Pass', 'AK4HT > 510')    
 jCuts.Add('3 AK8s Pass', 'NFatJets_central > 2')    # need to ensure three jets exist
 
-#jCuts.Add('3 AK8s Pass', 'nFatJet > 2')
 
 # ------------------ Add scale factors and MC jet-based calcs ------------------
 #TODO could be a fatJetVar group
 #if isMC
 jVars.Add("leptonRecoSF", "recofunc(electroncorr, muoncorr, yrstr, lepton_pt, lepton_eta, isEl)")
-
+jVars.Add("leptonIDSF", "idfunc(muonidcorr,elid_pts,elid_etas,elecidsfs,elecidsfuncs,yrstr, lepton_pt, lepton_eta, isEl)") #at(0) 
 
 # ------------------ Post Preselection Analysis ------------------
 ppaVars = VarGroup('postPreSelectionAnalysisVars')
@@ -327,12 +342,6 @@ nodeToPlot = a.Apply([metCuts, gjsonVars, gjsonCuts, lVars, lCuts, jVars, jCuts,
 #a.Apply(jCuts)
 #a.Apply(rframeVars)
 
-#snapshotOptions = ROOT.RDF.RSnapshotOptions.RSnapshotOptions() #a.DataFrame.RSnapshotOptions()
-#snapshotOptions.fLazy = False
-#columns = a.GetColumnNames()
-#a.DataFrame.Snapshot("VarFilters", "newfile.root", columns, snapshotOptions ) #.fLazy)
-
-
 allColumns = a.GetColumnNames()
 columns = [] #allColumns
 
@@ -362,12 +371,11 @@ for col in allColumns:
     if col.startswith("nOther") or col.startswith("nPS") or col.startswith("nPhoton"): continue
     if col.startswith("nSV") or col.startswith("nSub") or col.startswith("nTau") or col.startswith("nTrig"): continue
     if col.startswith("nboosted"): continue
-    
+    #TODO need to figure out how to exclude the things related to nSub and Sub.
     columns.append(col)
 
 #TODO think do we really want to recreate this everytime?  or just create?
 a.Snapshot(columns, "out_Tprime.root", "Events", lazy=False, openOption='RECREATE', saveRunChain=False)
-
 
 myHist1 = a.GetActiveNode().DataFrame.Histo1D(('m_T_lab', 'Mass of T lab', 25, 500, 2000), 'VLQ_mass_T')
 myHist2 = a.GetActiveNode().DataFrame.Histo1D(('m_Tbar_lab', 'Mass of Tbar lab', 25, 500, 2000), 'VLQ_mass_Tbar')
@@ -384,9 +392,10 @@ myHist2a.Write()
 myHist3.Write()
 myHist4.Write()
 
+print("--------- Analysis End ---------")
+
 out.Close()
 
-a.PrintNodeTree('test_Tprime_out.png')
 
 a.Close()
 
