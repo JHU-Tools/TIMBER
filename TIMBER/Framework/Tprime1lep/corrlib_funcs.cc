@@ -63,3 +63,19 @@ RVec<float> idfunc(correction::Correction::Ref& muonidcorr, vector<float> &elid_
   return id;
 }; 
 
+// What is MET? it returns the corrections for met's transverse momentum and phi angle. 
+RVec<float> metfunc(correction::Correction::Ref& metptcorr, correction::Correction::Ref& metphicorr, 
+                    const float &met, const float &phi, const int &npvs, const unsigned int &run)
+//assigned types as per BtoTW git analyzer_RDF.cc
+{
+   float floatrun = run;
+   float floatnpvs = npvs;
+   float tmpmet = met;
+      if(tmpmet > 6500) tmpmet = 6499;
+         RVec<float> corrmet = {static_cast<float>(metptcorr->evaluate({tmpmet, phi, floatnpvs, floatrun})),
+                              static_cast<float>(metphicorr->evaluate({tmpmet, phi, floatnpvs, floatrun}))};
+  return corrmet;
+};
+
+
+

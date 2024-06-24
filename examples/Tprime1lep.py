@@ -100,6 +100,11 @@ auto electroncorr = electroncorrset->at("UL-Electron-ID-SF");
 auto muoncorr = muoncorrset->at("NUM_TrackerMuons_DEN_genTracks");
 auto muonidcorr = muoncorrset->at("NUM_MediumID_DEN_TrackerMuons");
 auto muonhltcorr = muoncorrset->at("NUM_Mu50_or_"+mutrig+"_DEN_CutBasedIdGlobalHighPt_and_TkIsoLoose"); 
+auto metptcorr = metcorrset->at("pt_metphicorr_pfmet_mc");
+auto metphicorr = metcorrset->at("phi_metphicorr_pfmet_mc");
+    if(!isMC) {
+	metptcorr = metcorrset->at("pt_metphicorr_pfmet_data");
+	metphicorr = metcorrset->at("phi_metphicorr_pfmet_data"); };
 """)
 
 
