@@ -112,7 +112,7 @@ def CompareShapes(outfilename,year,prettyvarname,bkgs={},signals={},names={},col
         # If bkg, set fill color and add to stack
         if pname in bkgs.keys():
             h.SetFillColorAlpha(colors[pname],0.2 if not stackBkg else 1)
-	    h.SetLineWidth(0) 
+            h.SetLineWidth(0) 
             if stackBkg: bkgStack.Add(h)
             if colors[pname] not in colors_in_legend:
                 legend.AddEntry(h,leg_name,'f')
