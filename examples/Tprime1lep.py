@@ -106,8 +106,10 @@ auto metphicorr = metcorrset->at("phi_metphicorr_pfmet_mc");
     if(!isMC) {
 	metptcorr = metcorrset->at("pt_metphicorr_pfmet_data");
 	metphicorr = metcorrset->at("phi_metphicorr_pfmet_data"); };
+auto muonhltcorr = muoncorrset->at("NUM_Mu50_or_"+mutrig+"_DEN_CutBasedIdGlobalHighPt_and_TkIsoLoose"); 
 """)
 
+#from muonhltcorr => std::cout << "\t loaded muon trig" << std::endl; // REDO ME (Do we need to change something?)
 
 # ------------------ MET Cuts ------------------
 metCuts = CutGroup('METCuts')
@@ -124,6 +126,11 @@ gjsonCuts = CutGroup('GoldenJsonCuts')
 
         # this was originally in the else block:
 gjsonVars.Add("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
+
+# ------------------- Lepton Selection --------- got this when adding hltfunc to corrlib_funcs.cc --------------
+auto LepSelect = LepDefs.Define("isMu", Form("(nMuon>0) && (HLT_Mu50%s) && (nSignalIsoMu==1) && (nVetoIsoLep==0) && (nElectron == 0 || nSignalIsoEl == 0)",tkmutrig.c_str()))
+    .Define("isEl", Form("(nElectron>0) && (%s) && (nSignalIsoEl==1) && (nVetoIsoLep==0) && (nMuon == 0 || nSignalIsoMu == 0)",eltrig.c_str()))
+    .Filter("isMu || isEl", "Event is either muon or electron")
 
 # ------------------ Letpon Cuts ------------------
 lVars = VarGroup('LeptonVars')
