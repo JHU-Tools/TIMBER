@@ -17,6 +17,13 @@ sys.path.append('../../../')
 num_threads = 1
 file_name = 'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL18NanoAODv9/TprimeTprime_M-1500_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/40000/447AD74F-034B-FA42-AD05-CD476A98C43D.root'
 
+#TODO isMC? isVV? isSig? etc.
+isMC = True
+'''if "/mc/" in file_name:
+  isMC = True
+else: 
+  isMC = False'''
+
 year = sys.argv[1] # first command line argument
 
 # Import the C++
@@ -47,8 +54,6 @@ ROOT.gInterpreter.Declare('string year = "' + year + '";')
 
 debug = False
 
-#TODO isMC? isVV? isSig? etc.
-isMC = False
 
 # ------------------ Golden JSON Data ------------------
 # change the jsonfile path to somewhere they have it in TIMBER
@@ -61,7 +66,7 @@ else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expecte
 #const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
 #//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
 #""")
-A
+
 
 # ------------------ Self-derived corrections ------------------
 
@@ -223,9 +228,12 @@ jCuts.Add('3 AK8s Pass', 'NFatJets_central > 2')    # need to ensure three jets 
 
 # ------------------ Add scale factors and MC jet-based calcs ------------------
 #TODO could be a fatJetVar group
-#if isMC
-jVars.Add("leptonRecoSF", "recofunc(electroncorr, muoncorr, yrstr, lepton_pt, lepton_eta, isEl)")
-jVars.Add("leptonIDSF", "idfunc(muonidcorr,elid_pts,elid_etas,elecidsfs,elecidsfuncs,yrstr, lepton_pt, lepton_eta, isEl)") #at(0) 
+if isMC:
+  jVars.Add("leptonRecoSF", "recofunc(electroncorr, muoncorr, yrstr, lepton_pt, lepton_eta, isEl)")
+  jVars.Add("leptonIDSF", "idfunc(muonidcorr,elid_pts,elid_etas,elecidsfs,elecidsfuncs,yrstr, lepton_pt, lepton_eta, isEl)") #at(0) 
+  jVars.Add("leptonIsoSF", "isofunc(muiso_pts,muiso_etas,muonisosfs,muonisosfunc,elid_pts,elid_etas,elecisosfs,elecisosfunc, lepton_pt, lepton_eta, isEl)")
+
+  
 
 # ------------------ Post Preselection Analysis ------------------
 ppaVars = VarGroup('postPreSelectionAnalysisVars')

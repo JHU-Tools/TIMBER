@@ -1,5 +1,5 @@
 // Methods in this file:
-// goldenjson() pufunc() recofunc() idfunc() 
+// goldenjson() pufunc() recofunc() idfunc() isofunc() hltfunc() 
 
 // --------------------------------------------------------
 // 		    PILE UP FXN
@@ -58,3 +58,18 @@ RVec<float> idfunc(correction::Correction::Ref& muonidcorr, vector<float> &elid_
   return id;
 }; 
 
+// iso function
+RVec<double> isofunc(vector<float> muiso_pts, vector<float> muiso_etas, vector<vector<float>> muonisosfs, float muonisosfunc, vector<float> elid_pts, vector<float> elid_etas, vector<vector<float>> elecisosfs, float elecisosfunc, const float &pt, const float &eta, const bool &isEl)
+{
+  RVec<double> iso;
+  if(isEl > 0){
+    int ptbin = (std::upper_bound(elid_pts.begin(), elid_pts.end(), pt) - elid_pts.begin())-1;
+    int etabin = (std::upper_bound(elid_etas.begin(), elid_etas.end(), eta) - elid_etas.begin())-1;
+    iso = {elecisosfs[ptbin][etabin], elecisosfunc};
+  }else{
+    int ptbin = (std::upper_bound(muiso_pts.begin(), muiso_pts.end(), pt) - muiso_pts.begin())-1;
+    int etabin = (std::upper_bound(muiso_etas.begin(), muiso_etas.end(), abs(eta)) - muiso_etas.begin())-1;
+    iso = {muonisosfs[ptbin][etabin], muonisosfunc};
+  }
+  return iso;
+};
