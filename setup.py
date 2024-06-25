@@ -18,7 +18,7 @@ setuptools.setup(
     install_requires = [
         "decorator==4.4.2",
         "pyparsing==2.4.7",
-        "graphviz==0.14.2",
+        #"graphviz==0.14.2",
         "pydot==1.4.1",
         "networkx==2.2",
         "clang==6.0.0.2",

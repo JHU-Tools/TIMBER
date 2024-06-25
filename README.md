@@ -27,7 +27,7 @@ Copy the whole multi-line string to the environment activation script
 ```
 cat <<EOT >> timber-env/bin/activate
 
-export BOOSTPATH=/cvmfs/cms.cern.ch/slc7_amd64_gcc10/external/boost/1.75.0/lib
+export BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc10/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/lib
 if grep -q '\${BOOSTPATH}' <<< '\${LD_LIBRARY_PATH}'
 then
   echo 'BOOSTPATH already on LD_LIBRARY_PATH'
