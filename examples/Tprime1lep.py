@@ -15,7 +15,8 @@ sys.path.append('../../')
 sys.path.append('../../../')
 
 num_threads = 1
-file_name = 'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL18NanoAODv9/TprimeTprime_M-1500_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/40000/447AD74F-034B-FA42-AD05-CD476A98C43D.root'
+#file_name = 'root://cmsxrootd.fnal.gov//store/mc/RunIISummer20UL18NanoAODv9/TprimeTprime_M-1500_TuneCP5_13TeV-madgraph-pythia8/NANOAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/40000/447AD74F-034B-FA42-AD05-CD476A98C43D.root'
+file_name = 'ourtestfile.root'
 
 year = sys.argv[1] # first command line argument
 
@@ -48,7 +49,7 @@ ROOT.gInterpreter.Declare('string year = "' + year + '";')
 debug = False
 
 #TODO isMC? isVV? isSig? etc.
-isMC = False
+isMC = True
 
 # ------------------ Golden JSON Data ------------------
 # change the jsonfile path to somewhere they have it in TIMBER
@@ -61,7 +62,6 @@ else: print(f'ERROR: Can\'t parse the year to assign a golden json file. Expecte
 #const auto myLumiMask = lumiMask::fromJSON(\"""" + jsonfile + """\");
 #//  std::cout << "Testing the JSON! Known good run/lumi returns: " << myLumiMask.accept(315257, 10) << ", and known bad run returns: " << myLumiMask.accept(315257, 90) << std::endl;
 #""")
-A
 
 # ------------------ Self-derived corrections ------------------
 
@@ -95,6 +95,7 @@ ROOT.gInterpreter.Declare("""
 auto csetPU = correction::CorrectionSet::from_file("jsonpog-integration/POG/LUM/"+yrstr+"_UL/puWeights.json");
 auto electroncorrset = correction::CorrectionSet::from_file("jsonpog-integration/POG/EGM/"+yrstr+"_UL/electron.json");
 auto muoncorrset = correction::CorrectionSet::from_file("jsonpog-integration/POG/MUO/"+yrstr+"_UL/muon_Z.json");
+auto metcorrset = correction::CorrectionSet::from_file("jsonpog-integration/POG/JME/"+yrstr+"_UL/met.json");
 
 auto corrPU = csetPU->at("Collisions"+yr+"_UltraLegacy_goldenJSON");
 auto electroncorr = electroncorrset->at("UL-Electron-ID-SF"); 
@@ -103,15 +104,18 @@ auto muonidcorr = muoncorrset->at("NUM_MediumID_DEN_TrackerMuons");
 auto muonhltcorr = muoncorrset->at("NUM_Mu50_or_"+mutrig+"_DEN_CutBasedIdGlobalHighPt_and_TkIsoLoose"); 
 auto metptcorr = metcorrset->at("pt_metphicorr_pfmet_mc");
 auto metphicorr = metcorrset->at("phi_metphicorr_pfmet_mc");
-    if(!isMC) {
-	metptcorr = metcorrset->at("pt_metphicorr_pfmet_data");
-	metphicorr = metcorrset->at("phi_metphicorr_pfmet_data"); };
-auto muonhltcorr = muoncorrset->at("NUM_Mu50_or_"+mutrig+"_DEN_CutBasedIdGlobalHighPt_and_TkIsoLoose"); 
 """)
+
+
+# if(!isMC) {
+#	metptcorr = metcorrset->at("pt_metphicorr_pfmet_data");
+#	metphicorr = metcorrset->at("phi_metphicorr_pfmet_data"); };
+
 
 #from muonhltcorr => std::cout << "\t loaded muon trig" << std::endl; // REDO ME (Do we need to change something?)
 
 # ------------------ MET Cuts ------------------
+metVars = VarGroup('METVars')
 metCuts = CutGroup('METCuts')
 metCuts.Add('MET Filters', 'Flag_EcalDeadCellTriggerPrimitiveFilter == 1 && Flag_goodVertices == 1 && Flag_HBHENoiseFilter == 1 && Flag_HBHENoiseIsoFilter == 1 && Flag_eeBadScFilter == 1 && Flag_globalSuperTightHalo2016Filter == 1 && Flag_BadPFMuonFilter == 1 && Flag_ecalBadCalibFilter == 1')
 metCuts.Add('Pass MET > 50', 'MET_pt > 50')
@@ -128,9 +132,9 @@ gjsonCuts = CutGroup('GoldenJsonCuts')
 gjsonVars.Add("PileupWeights", "pufunc(corrPU, Pileup_nTrueInt)")
 
 # ------------------- Lepton Selection --------- got this when adding hltfunc to corrlib_funcs.cc --------------
-auto LepSelect = LepDefs.Define("isMu", Form("(nMuon>0) && (HLT_Mu50%s) && (nSignalIsoMu==1) && (nVetoIsoLep==0) && (nElectron == 0 || nSignalIsoEl == 0)",tkmutrig.c_str()))
-    .Define("isEl", Form("(nElectron>0) && (%s) && (nSignalIsoEl==1) && (nVetoIsoLep==0) && (nMuon == 0 || nSignalIsoMu == 0)",eltrig.c_str()))
-    .Filter("isMu || isEl", "Event is either muon or electron")
+#auto LepSelect = LepDefs.Define("isMu", Form("(nMuon>0) && (HLT_Mu50%s) && (nSignalIsoMu==1) && (nVetoIsoLep==0) && (nElectron == 0 || nSignalIsoEl == 0)",tkmutrig.c_str()))
+ #   .Define("isEl", Form("(nElectron>0) && (%s) && (nSignalIsoEl==1) && (nVetoIsoLep==0) && (nMuon == 0 || nSignalIsoMu == 0)",eltrig.c_str()))
+  #  .Filter("isMu || isEl", "Event is either muon or electron")
 
 # ------------------ Letpon Cuts ------------------
 lVars = VarGroup('LeptonVars')
@@ -233,11 +237,21 @@ jCuts = CutGroup('JetCuts')
 jCuts.Add('3 AK8s Pass', 'NFatJets_central > 2')    # need to ensure three jets exist
 
 
+# -----------------------------MET Selection--------------------------------------------------------- 
+
+metVars.Add("metxyoutput", "metfunc(metptcorr, metphicor, corrMETnoxy_pt, corrMETnoxy_phi, PV_npvs, run)")
+metVars.Add("corrMET_pt","metxyoutput[0]")
+metVars.Add("corrMET_phi","metxyoutput[1]")
+
+metCuts.Add("Pass corr MET > 60", "corrMET_pt > 60")
+metCuts.Add("Electron Triangle Cut", "isMu || corrMET_pt>((130/1.5)*DeltaPhi(lepton_phi, corrMET_phi)-130)");
+
 # ------------------ Add scale factors and MC jet-based calcs ------------------
 #TODO could be a fatJetVar group
 #if isMC
 jVars.Add("leptonRecoSF", "recofunc(electroncorr, muoncorr, yrstr, lepton_pt, lepton_eta, isEl)")
 jVars.Add("leptonIDSF", "idfunc(muonidcorr,elid_pts,elid_etas,elecidsfs,elecidsfuncs,yrstr, lepton_pt, lepton_eta, isEl)") #at(0) 
+jVars.Add("leptonHLTSF", "hltfunc(muonhltcorr,elhlt_pts,elhlt_etas,elechltsfs,elechltuncs,yrstr, lepton_pt, lepton_eta, isEl)")
 
 # ------------------ Post Preselection Analysis ------------------
 ppaVars = VarGroup('postPreSelectionAnalysisVars')
