@@ -58,7 +58,6 @@ RVec<float> idfunc(correction::Correction::Ref& muonidcorr, vector<float> &elid_
   return id;
 }; 
 
-<<<<<<< HEAD
 // iso function
 RVec<double> isofunc(vector<float> muiso_pts, vector<float> muiso_etas, vector<vector<float>> muonisosfs, float muonisosfunc, vector<float> elid_pts, vector<float> elid_etas, vector<vector<float>> elecisosfs, float elecisosfunc, const float &pt, const float &eta, const bool &isEl)
 {
@@ -74,7 +73,7 @@ RVec<double> isofunc(vector<float> muiso_pts, vector<float> muiso_etas, vector<v
   }
   return iso;
 };
-=======
+
 // What is MET? it returns the corrections for met's transverse momentum and phi angle. 
 RVec<float> metfunc(correction::Correction::Ref& metptcorr, correction::Correction::Ref& metphicorr, 
                     const float &met, const float &phi, const int &npvs, const unsigned int &run)
@@ -111,5 +110,3 @@ RVec<double> hltfunc(correction::Correction::Ref& muonhltcorr, vector<float> &el
     return hlt;
  }; 
 
-
->>>>>>> refs/remotes/origin/restframes_devel
