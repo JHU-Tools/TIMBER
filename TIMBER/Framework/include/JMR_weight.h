@@ -7,18 +7,15 @@
 
 using namespace ROOT::VecOps;
 /**
- * @brief C++ class to directly handle JMR weights in the case of tau21
- * jet substructure. The values used (nominal, up, down) are:
- *  - 2016: 1.00, 1.2,  0.8
- *  - 2017: 1.09, 1.14, 1.04
- *  - 2018: 1.09, 1.14, 1.04
+ * @brief C++ class to directly handle JMR weights
+ * The values are taken from CASE analysis AN20-051-v14
  */
 class JMR_weight {
     private:
         std::map< int, std::vector<float> > _jmrTable {
-            {2016, {1.00, 1.2,  0.8 } },
-            {2017, {1.09, 1.14, 1.04} },
-            {2018, {1.09, 1.14, 1.04} }
+            {2016, {1.00, 1.08,  0.92} },
+            {2017, {1.00, 1.08,  0.92} },
+            {2018, {1.00, 1.08,  0.92} }
         };
         JetSmearer _smearer;
         

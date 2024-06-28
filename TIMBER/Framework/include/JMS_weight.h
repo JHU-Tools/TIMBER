@@ -9,8 +9,8 @@
 using namespace ROOT::VecOps;
 
 /**
- * @brief C++ class to directly handle JMS weights in the case of tau21
- *  jet substructure. The values used (nominal, up, down) are:
+ * @brief C++ class to directly handle JMR weights
+ * The values are taken from CASE analysis AN20-051-v14
  *  - 2016: 1.000, 1.0094, 0.9906
  *  - 2017: 0.982, 0.986,  0.978
  *  - 2018: 0.982, 0.986,  0.978
@@ -18,9 +18,9 @@ using namespace ROOT::VecOps;
 class JMS_weight {
     private:
         std::map< int, std::vector<float> > _jmsTable {
-            {2016, {1.000, 1.0094, 0.9906} },
-            {2017, {0.982, 0.986 , 0.978 } },
-            {2018, {0.982, 0.986 , 0.978 } }
+            {2016, {1.00, 1.05, 0.95} },
+            {2017, {1.00, 1.05, 0.95} },
+            {2018, {1.00, 1.05, 0.95} }
         };
         std::vector<float> _jmsVals;
     public:
