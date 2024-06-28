@@ -30,6 +30,11 @@ RVec<float> TopPt_weight::eval(
         RVec<int> GenPart_pdgId, RVec<int> GenPart_statusFlags, RVec<ROOT::Math::PtEtaPhiMVector> GenPart_vect,
         ROOT::Math::PtEtaPhiMVector jet0, ROOT::Math::PtEtaPhiMVector jet1, float scale){
 
+    if(jet0.Pt()==0. || jet1.Pt()==0.){
+        //Gives possibility to evaluate events that don't have valid jets
+        return {1.0,1.0,1.0}
+    }
+
     std::vector<float> matched = matchingGenPt(GenPart_pdgId, GenPart_statusFlags,
                                           GenPart_vect, jet0, jet1);
     float genTPt = matched[0];
