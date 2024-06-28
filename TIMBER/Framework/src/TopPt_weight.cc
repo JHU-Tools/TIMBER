@@ -32,7 +32,7 @@ RVec<float> TopPt_weight::eval(
 
     if(jet0.Pt()==0. || jet1.Pt()==0.){
         //Gives possibility to evaluate events that don't have valid jets
-        return {1.0,1.0,1.0}
+        return {1.0,1.0,1.0};
     }
 
     std::vector<float> matched = matchingGenPt(GenPart_pdgId, GenPart_statusFlags,
