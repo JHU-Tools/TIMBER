@@ -16,9 +16,9 @@ using namespace ROOT::VecOps;
 class JMR_weight {
     private:
         std::map< int, std::vector<float> > _jmrTable {
-            {2016, {1.00, 1.2,  0.8 } },
-            {2017, {1.09, 1.14, 1.04} },
-            {2018, {1.09, 1.14, 1.04} }
+            {2016, {1.00, 1.08,  0.92 } },
+            {2017, {1.00, 1.08,  0.92 }},
+            {2018, {1.00, 1.08,  0.92 }}
         };
         JetSmearer _smearer;
         
