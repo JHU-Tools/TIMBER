@@ -13,14 +13,17 @@ import onnxruntime as ort #this import is needed to read the .onnx file that con
 import numpy as np
 
 #Adapted from here: https://root-forum.cern.ch/t/make-rdataframes-interoperable-with-other-python-tools/48384/3 and here https://root-forum.cern.ch/t/adding-a-numpy-array-as-a-new-column-to-an-existing-rdataframe/60230/4
+#this function adds a numpy array to an existing RDataFrame
 def add_to_df(analyzer,prediction,column_name):
     analyzer.Define("myEntry", "static unsigned int myEntry = 0; return myEntry++;")
     @ROOT.Numba.Declare(["int"], "float")
+    #need to be able to call a funtion in analyzer.Define()
     def get_prediction(index):
         return prediction[index]
     
     analyzer.Define(column_name, "Numba::get_prediction(myEntry)")
 
+#function to run inference using the neural network and return an array containing the result
 def inference(x, y):
     ort_sess = ort.InferenceSession('trained_model.onnx',providers=['CPUExecutionProvider'])
     
@@ -39,10 +42,11 @@ def inference(x, y):
     print(x,y,results[0])
     return results[0]
 
-a = analyzer("trained_model.root") #return to this to look at the .root file
+a = analyzer("signalLH1800_bstar16.root") #return to this to look at the .root file
 a.Cut("nFatJet","nFatJet>1")
 a.Define("pt0","FatJet_pt[0]")
 a.Define("pt1","FatJet_pt[1]")
+#create numpy arrays with the data from two columns from the RDataFrame
 pt0 = np.array(a.DataFrame.AsNumpy(["pt0"])["pt0"], dtype=np.float32)
 pt1 = np.array(a.DataFrame.AsNumpy(["pt1"])["pt1"], dtype=np.float32)
 
