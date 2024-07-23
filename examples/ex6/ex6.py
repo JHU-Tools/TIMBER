@@ -6,6 +6,9 @@
 # with each input.
 # This example does not handle the creation of the .onnx file, it uses an existing one.
 
+# To run this example, use a timber environment, and make sure you install Numba on your timber environment
+# You can install numba with: pip install numba
+
 import ROOT
 from TIMBER.Tools.Common import *
 from TIMBER.Analyzer import *
@@ -25,6 +28,7 @@ def add_to_df(analyzer,prediction,column_name):
 
 #function to run inference using the neural network and return an array containing the result
 def inference(x, y):
+    # 'trained_model.onnx' stores a neural network that predicts the sum of the squares of its two inputs
     ort_sess = ort.InferenceSession('trained_model.onnx',providers=['CPUExecutionProvider'])
     
     #If you need to figure out the input shape and name
@@ -42,7 +46,7 @@ def inference(x, y):
     print(x,y,results[0])
     return results[0]
 
-a = analyzer("signalLH1800_bstar16.root") #return to this to look at the .root file
+a = analyzer("signalLH1800.root") #return to this to look at the .root file
 a.Cut("nFatJet","nFatJet>1")
 a.Define("pt0","FatJet_pt[0]")
 a.Define("pt1","FatJet_pt[1]")
