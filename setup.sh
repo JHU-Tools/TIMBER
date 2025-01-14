@@ -11,6 +11,9 @@ fi
 #   return
 # fi
 
+# Hack to downgrade setuptools so that it doesn't complain during setup.py
+pip install --force-reinstall -v "setuptools==70.0.0"
+
 python setup.py develop
 activate_path=$VIRTUAL_ENV/bin/activate
 export TIMBERPATH="$PWD/"
