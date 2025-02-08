@@ -24,7 +24,9 @@ cd ../..
 
 Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand. This version works for both CMSSW versions used for lxplus8 and lxplus9. If one does not wish to use CMSSW, boost libraries will have to be installed (and added to the MakeFile).
 
-Copy the whole multi-line string to the environment activation script
+Secondly, if operating on a cluster (e.g. FNAL LPC or CERN LXPLUS) and in a CMSSW environment, it is beneficial to have the CMSSW's [`correctionlib`](https://cms-nanoaod.github.io/correctionlib/) C++ libraries included. This is obtained by adding the path to the correctionlib include directory to the `ROOT_INCLUDE_PATH` environment variable.
+
+This can all be automated by copying the whole following multi-line string to the environment activation script:
 
 ```
 cat <<EOT >> timber-env/bin/activate
@@ -37,10 +39,15 @@ else
   export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:\${BOOSTPATH}
   echo 'BOOSTPATH added to PATH'
 fi
+
+if [[ -z "${CMSSW_BASE}" ]]; then
+    export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$(correction config --incdir)
+fi
+
 EOT
 ```
 
-This will activate the python3 environment, set a proper LD_LIBRARY_PATH for boost libraries and build the TIMBER binaries
+The following lines will activate the python3 environment, set a proper LD_LIBRARY_PATH for boost libraries and build the TIMBER binaries.
 
 ```
 source timber-env/bin/activate

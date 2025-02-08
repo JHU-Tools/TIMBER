@@ -129,7 +129,7 @@ class JER_correctionlib_weight {
         }
 };
 
-JER_correctionlib_weight::JER_correctionlib_weight(std::string fname, std::string key_jes, std::string key_res, std::string key_sf, float dRMax, float dPtMaxFactor = 3.) : _dRMax(dRMax), _dPtMaxFactor(dPtMaxFactor), _key_jes(key_jes), _key_res(key_res), _key_sf(key_sf) {
+JER_correctionlib_weight::JER_correctionlib_weight(std::string fname, std::string key_jes, std::string key_res, std::string key_sf, float dRMax, float dPtMaxFactor) : _dRMax(dRMax), _dPtMaxFactor(dPtMaxFactor), _key_jes(key_jes), _key_res(key_res), _key_sf(key_sf) {
     _cset = correction::CorrectionSet::from_file(fname.c_str());
 }
 
