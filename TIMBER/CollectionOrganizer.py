@@ -192,7 +192,9 @@ class CollectionOrganizer:
         newNode = node
         for c in self._collectionDict.keys():
             if re.search(r"\b" + re.escape(c+'s') + r"\b", action_str) and (c+'s' not in self._builtCollections):
-                print ('MAKING %ss for %s'%(c,action_str))
+                print(f'[TIMBER.CollectionOrganizer] INFO: collection {c}s does not exist')
+                print(f'[TIMBER.CollectionOrganizer] INFO: available collections are {self._builtCollections}')
+                print(f'\tMAKING {c}s for requested action "{action_str}"')
                 newNode = self.BuildCppCollection(c,newNode,silent=True)
         return newNode
 

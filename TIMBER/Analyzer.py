@@ -1122,24 +1122,24 @@ class analyzer(object):
         arguments provided in evalArgs. Create a new collection
         with the calibrations applied and any re-ordering of the collection applied. As an example...
 
-```
-a = analyzer(...)
-jes = Calibration("JES","TIMBER/Framework/include/JES_weight.h",
-        [GetJMETag("JES",str(year),"MC"),"AK8PFPuppi","","true"], corrtype="Calibration")
-jer = Calibration("JER","TIMBER/Framework/include/JER_weight.h",
-        [GetJMETag("JER",str(year),"MC"),"AK8PFPuppi"], corrtype="Calibration")
-...
-varCalibDict = {
-    "FatJet_pt" : [jes, jer]
-    "FatJet_mass" : [jes, jer]
-}
-evalArgs = {
-    jes : {"jets":"FatJets"},
-    jer : {"jets":"FatJets","genJets":"GenJets"}
-},
-a.CalibrateVars(varCalibDict,evalArgs,"CorrectedFatJets")
-
-```
+        ```
+        a = analyzer(...)
+        jes = Calibration("JES","TIMBER/Framework/include/JES_weight.h",
+                [GetJMETag("JES",str(year),"MC"),"AK8PFPuppi","","true"], corrtype="Calibration")
+        jer = Calibration("JER","TIMBER/Framework/include/JER_weight.h",
+                [GetJMETag("JER",str(year),"MC"),"AK8PFPuppi"], corrtype="Calibration")
+        ...
+        varCalibDict = {
+            "FatJet_pt" : [jes, jer]
+            "FatJet_mass" : [jes, jer]
+        }
+        evalArgs = {
+            jes : {"jets":"FatJets"},
+            jer : {"jets":"FatJets","genJets":"GenJets"}
+        },
+        a.CalibrateVars(varCalibDict,evalArgs,"CorrectedFatJets")
+        ```
+        
         This will apply the JES and JER calibrations and their four variations (up,down pair for each) to FatJet_pt and FatJet_mass branches
         and create a new collection called "CalibratedFatJets" which will be ordered by the new pt values. Note that if you want to correct a different
         collection (ex. AK4 based Jet collection), you need a separate payload and separate call to CalibrateVars because only one collection can be generated at a time.
@@ -1174,7 +1174,7 @@ a.CalibrateVars(varCalibDict,evalArgs,"CorrectedFatJets")
         
         # Create the product of weights
         new_columns =  OrderedDict()
-        if len(varCalibDict.keys()) > 0: baseCollectionName = varCalibDict.keys()[0].split('_')[0]
+        if len(varCalibDict.keys()) > 0: baseCollectionName = list(varCalibDict.keys())[0].split('_')[0]
         for var in varCalibDict.keys():
             isRVec = "RVec" in self.DataFrame.GetColumnType(var)
             # nominal first
@@ -1194,7 +1194,7 @@ a.CalibrateVars(varCalibDict,evalArgs,"CorrectedFatJets")
                             new_columns[var+'_'+calib.name+'__'+v] = new_columns[new_var_name].replace(calib.name+'__vec[0]',calib.name+'__vec[%s]'%i+1)
                         else:
                             nom_minus_calib = new_columns[new_var_name].replace(calib.name+'__vec,','').replace(calib.name+'__vec','')
-                            new_columns[var+'_'+calib.name+'__'+v] = 'hardware::HadamardProduct({0},{1},{2})'.format(nom_minus_calib, calib.name+'__vec',i+1)
+                            new_columns[var+'_'+calib.name.split('_')[-1]+'__'+v] = 'hardware::HadamardProduct({0},{1},{2})'.format(nom_minus_calib, calib.name+'__vec',i+1)
         # Actually define the columns 
         for c in new_columns.keys():
             newNode = self.Define(c, new_columns[c], newNode, nodetype='Calibration')
