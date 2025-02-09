@@ -47,6 +47,9 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     if ((a.isData) and (dataEra == '')):
         raise ValueError(f'Running on data but no dataEra specified.')
 
+    # Get the 4-digit year
+    y = int(year.split('_')[0][:4])
+
     # Determine the jet clustering and cleaning algorithm and which JSON file to use
     if jetCollection == AK8collection:
         algo  = 'AK8PFPuppi'
@@ -54,14 +57,17 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         genJetColl = "GenJetAK8"
         dRmax = 0.8
         # Determine whether to do JMR/JMS corrections to MC
-        y = int(year.split('_')[0][:4])
         if (y <= 2018): # Run 2
             doMass = True
         else:
             doMass = False
     elif jetCollection == AK4collection:
-        algo  = 'AK4PFchs'
-        json  = 'jet_jerc'
+        y = int(year.split('_')[0][:4])
+        if (y <= 2018): # Run 2
+            algo = 'AK4PFchs'
+        else:
+            algo = 'AK4PFPuppi'
+        json = 'jet_jerc'
         genJetColl = "GenJet"
         drMax = 0.4
         doMass = False
@@ -94,7 +100,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         keysData = [k for k in keys if 'DATA' in k]
         for k in keysData: 
             era = k.split('_')[1]
-            if era in dataEra: 
+            if dataEra in era: 
                 found = True
                 key = k
                 break
@@ -110,7 +116,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     jes = Calibration(
         f"{jetCollection}_JES",
         "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
-        [fname_jes, key, key.replace(level,unc)], 
+        [fname_jes, key, key.replace(level,unc), a.isData], 
         corrtype='Calibration'
     )
     
@@ -120,7 +126,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
             "eta": f"{jetCollection}_eta",
             "phi": f"{jetCollection}_phi",
             "area": f"{jetCollection}_area",
-            "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll"
+            "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
         }
     }
 
@@ -169,7 +175,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
             jer: {
                 "jets":f"{jetCollection}s",
                 "genJets":f"{genJetColl}s",
-                "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll"
+                "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
             }
         }
 
@@ -191,7 +197,26 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     print('----------------------------------------------------------------------------------------')
 
 
+    # h1 = a.DataFrame.Histo1D(('test1','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
+    # h2 = a.DataFrame.Histo1D(('test2','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop')
+    # h1.SetLineColor(ROOT.kBlack)
+    # h2.SetLineColor(ROOT.kRed)
 
+    # c = ROOT.TCanvas('c','c')
+    # c.cd()
+    # h1.Draw()
+    # h2.Draw('hist same')
+    # leg = ROOT.TLegend(.73,.32,.97,.53)
+    # leg.SetBorderSize(0)
+    # leg.SetFillColor(0)
+    # leg.SetFillStyle(0)
+    # leg.SetTextFont(42)
+    # leg.SetTextSize(0.035)
+    # leg.AddEntry(h1.GetPtr(),"corr","L")
+    # leg.AddEntry(h2.GetPtr(),"no corr","L")
+    # leg.Draw()
+
+    # c.Print("JES.pdf")
 
     # h1 = a.DataFrame.Histo1D(('test1','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
     # h2 = a.DataFrame.Histo1D(('test2','test2',100,0,300),'FatJet_msoftdrop_JES__up')
@@ -224,7 +249,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
 
     # c.Print("JES.pdf")
 
-    # #--------------------------------------- JER
+    #--------------------------------------- JER
 
     # h1 = a.DataFrame.Histo1D(('test1','JER-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
     # h2 = a.DataFrame.Histo1D(('test2','test2',100,0,300),'FatJet_msoftdrop_JER__up')
