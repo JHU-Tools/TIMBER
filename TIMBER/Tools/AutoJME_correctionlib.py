@@ -1,7 +1,7 @@
 '''
 Automatic calculation of per-jet per-event JES factors and uncertainties.
 '''
-from TIMBER.Tools.Common import GetJMETag
+from TIMBER.Tools.Common import GetJMETag, CompileCpp
 from TIMBER.Analyzer import Calibration
 import correctionlib._core as core
 import ROOT
@@ -197,7 +197,19 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         else:
             a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
 
-
+    # JET VETO MAPS NOT WORKING YET
+    '''
+    # Now apply veto maps to Data and MC (Run 3 ONLY)
+    if (y > 2018):
+        print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
+        fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
+        cset_vetomap = core.CorrectionSet.from_file(fname_vetomap)
+        key_vetomap = [k for k in cset_vetomap][0]  # there is only one vetomap key, so the key will always be the first and only element
+        CompileCpp('TIMBER/Framework/src/JERC_JetVeto.cc')
+        CompileCpp(f'JERC_JetVeto jet_vetoer = JERC_JetVeto("{fname_vetomap}","{key_vetomap}");')
+        a.Define('jetmap_vetoed_events',f'jet_vetoer.eval(Jets)')   # Pass in the TIMBER-created struct for the AK4 jets ("Jet"+"s")
+        a.Cut('JERC_jet_veto','jetmap_vetoed_events == 1')
+    '''
 
     print('\n----------------------------------------------------------------------------------------')
     print('------------------------------Finished AutoJME -----------------------------------------')

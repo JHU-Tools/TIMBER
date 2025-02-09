@@ -15,7 +15,7 @@ CORRECTIONLIB=-I/cvmfs/cms.cern.ch/${SCRAM_ARCH}/external/py3-correctionlib/2.1.
 CPP_FILES=$(wildcard $(SOURCE_DIR)*.cc $(EXT_DIR)*.cpp  $(EXT_DIR)*.cc)
 HEADERS=$(CPP_FILES:$(SOURCE_DIR)%.cc=$(HEADER_DIR)%.h)
 
-JME_FILES=JetSmearer.cc JetRecalibrator.cc JMR_weight.cc JER_weight.cc JES_weight.cc JMS_weight.cc JME_common.cc JER_correctionlib_weight.cc JES_correctionlib_weight.cc
+JME_FILES=JetSmearer.cc JetRecalibrator.cc JMR_weight.cc JER_weight.cc JES_weight.cc JMS_weight.cc JME_common.cc JER_correctionlib_weight.cc JES_correctionlib_weight.cc JERC_JetVeto.cc
 JME_FILES:=$(JME_FILES:%.cc=$(SOURCE_DIR)%.cc)
 ifndef CMSSW_VERSION
 	CPP_FILES:=$(filter-out $(JME_FILES), $(CPP_FILES))
