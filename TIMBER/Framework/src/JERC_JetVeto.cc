@@ -50,6 +50,10 @@ class JERC_JetVeto {
                 // First check whether we the jet passes the nominal "loose selection"
                 bool jet_passes = (jets[ijet].pt > 15) && (jets[ijet].jetId == 6) && ((jets[ijet].chEmEF + jets[ijet].neEmEF) < 0.9);
                 if (jet_passes) {   // Consult jet veto map
+                    // First impose checks on valid eta and phi. The eta/phi variables have a certain allowed range in correctionlib and will fail if passed a value outside that range.
+                    if (abs(jets[ijet].eta) > 5.191) {continue;}
+                    if (abs(jets[ijet].phi) > 3.1415926536) {continue;}
+
                     float veto;
                     std::map<std::string, correction::Variable::Type> map {
                         {"type", "jetvetomap"},  // name of the type of veto map. The recommended map for analyses is 'jetvetomap'. Other possible values: jetvetomap, jetvetomap_all, jetvetomap_hbp2m1, jetvetomap_hem1516, jetvetomap_hot
