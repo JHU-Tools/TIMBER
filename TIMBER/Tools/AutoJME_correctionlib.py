@@ -74,8 +74,9 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     else:
         available_colls = list(a._collectionOrg.GetCollectionNames())
         raise ValueError(f'Jet collection name {jetCollection} not supported. Make sure to set AutoJME.AK8collection or AutoJME.AK4collection if using a custom collection. The collections available in the passed analyzer are: {available_colls}')
+
     # Determine the JEC level
-    levels = ['L1Fastjet', 'L2Relative', 'L3Absolute', 'L2L3Residual'] # NOT IMPLEMENTED YET
+    levels = ['L1Fastjet', 'L2Relative', 'L3Absolute', 'L2L3Residual'] # NOT IMPLEMENTED YET (and not really needed for most cases)
     level  = 'L1L2L3Res' # Currently only supporting the compound correction
     unc    = 'Total'
 
@@ -154,8 +155,14 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         key_res = [i for i in cset_jes if 'PtResolution' in i][0]   # Each correctionset has only one of these keys, so the list will always be one element long
         key_sf  = [i for i in cset_jes if 'ScaleFactor' in i][0]
 
+        # Multiplicative factor to the difference b/w the GEN and RECO jet pT, used in the JER correction algorithm (see JER_correctionlib_weight.cc)
+        dpTmax = 3
+
         print(f'Using JER resolution key "{key_res}"')
-        print(f'Using JER SF key         "{key_sf}"\n')
+        print(f'Using JER SF key         "{key_sf}"')
+        print(f'Using hybrid smearing method with GEN match parameters:')
+        print(f'\t delta pT max factor = {dpTmax}')
+        print(f'\t deltaR max          = {dRmax}\n')
 
         jer = Calibration(
             f"{jetCollection}_JER",
@@ -166,7 +173,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
                 key_res,    # pt resolution key
                 key_sf,     # SF key
                 dRmax,      # used for gen<->reco matching. 0.8 for AK8, 0.4 for AK4
-                3           # dPtMaxFactor, default for CMS
+                dpTmax      # dPtMaxFactor, default for CMS
             ],
             corrtype='Calibration'
         )
@@ -197,26 +204,26 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     print('----------------------------------------------------------------------------------------')
 
 
-    # h1 = a.DataFrame.Histo1D(('test1','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
-    # h2 = a.DataFrame.Histo1D(('test2','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop')
-    # h1.SetLineColor(ROOT.kBlack)
-    # h2.SetLineColor(ROOT.kRed)
+    h1 = a.DataFrame.Histo1D(('test1','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
+    h2 = a.DataFrame.Histo1D(('test2','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop')
+    h1.SetLineColor(ROOT.kBlack)
+    h2.SetLineColor(ROOT.kRed)
 
-    # c = ROOT.TCanvas('c','c')
-    # c.cd()
-    # h1.Draw()
-    # h2.Draw('hist same')
-    # leg = ROOT.TLegend(.73,.32,.97,.53)
-    # leg.SetBorderSize(0)
-    # leg.SetFillColor(0)
-    # leg.SetFillStyle(0)
-    # leg.SetTextFont(42)
-    # leg.SetTextSize(0.035)
-    # leg.AddEntry(h1.GetPtr(),"corr","L")
-    # leg.AddEntry(h2.GetPtr(),"no corr","L")
-    # leg.Draw()
+    c = ROOT.TCanvas('c','c')
+    c.cd()
+    h1.Draw()
+    h2.Draw('hist same')
+    leg = ROOT.TLegend(.73,.32,.97,.53)
+    leg.SetBorderSize(0)
+    leg.SetFillColor(0)
+    leg.SetFillStyle(0)
+    leg.SetTextFont(42)
+    leg.SetTextSize(0.035)
+    leg.AddEntry(h1.GetPtr(),"corr","L")
+    leg.AddEntry(h2.GetPtr(),"no corr","L")
+    leg.Draw()
 
-    # c.Print("JES.pdf")
+    c.Print("JES.pdf")
 
     # h1 = a.DataFrame.Histo1D(('test1','JES-corrected m_{SD}',100,0,300),'FatJet_msoftdrop_nom')
     # h2 = a.DataFrame.Histo1D(('test2','test2',100,0,300),'FatJet_msoftdrop_JES__up')

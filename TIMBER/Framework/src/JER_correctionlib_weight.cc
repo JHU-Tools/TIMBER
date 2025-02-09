@@ -22,10 +22,13 @@ class JER_correctionlib_weight {
         float _dRMax, _dPtMaxFactor;
         std::mt19937 _rnd;
         static constexpr const double MIN_JET_ENERGY = 1e-2;
+        // Variables to keep track of GEN matching info
+        float _total = 0.;
+        float _matched = 0.; 
 
     public:
         JER_correctionlib_weight(std::string fname, std::string key_jes, std::string key_res, std::string key_sf, float dRMax, float dPtMaxFactor = 3.);
-        ~JER_correctionlib_weight(){};
+        ~JER_correctionlib_weight();
 
         /**
          * @brief Perform the actual matching
@@ -70,6 +73,10 @@ class JER_correctionlib_weight {
                 LorentzV reco_jet = hardware::TLvector(jets[ijet]);
                 LorentzV genJet = match(reco_jet, hardware::TLvector(genJets), jets[ijet].pt * res);
 
+                // Keep track of the number of total and matched jets to print upon object destruction
+                _total++;
+                if (genJet.Pt() > -1) {_matched++;}
+
                 // Now begin a loop over the variations {0: "nom", 1: "up", 2: "down"}
                 float smearFactor, dpT, sigma, jet_sf;
                 for (size_t i=0; i<3; i++) {
@@ -100,11 +107,11 @@ class JER_correctionlib_weight {
                     // Now determine how to handle the various cases.
                     //      Case 1: we have a "good" gen jet matched to the reco jet.
                     //      Case 2: we don't have a gen jet. Smear jet pt using a random gaussian variation.
-                    if (genJet.Pt() > -1) {
+                    if (genJet.Pt() > -1) { // Case 1
                         dpT = reco_jet.Pt() - genJet.Pt();
                         smearFactor = 1. + (jet_sf -1.) * dpT / reco_jet.Pt();
                     }
-                    else if (jet_sf > 1) {
+                    else if (jet_sf > 1) {  // Case 2
                         std::normal_distribution<> d(0, res);
                         smearFactor = 1. + d(_rnd) * std::sqrt(jet_sf * jet_sf - 1.);
                     }
@@ -131,6 +138,16 @@ class JER_correctionlib_weight {
 
 JER_correctionlib_weight::JER_correctionlib_weight(std::string fname, std::string key_jes, std::string key_res, std::string key_sf, float dRMax, float dPtMaxFactor) : _dRMax(dRMax), _dPtMaxFactor(dPtMaxFactor), _key_jes(key_jes), _key_res(key_res), _key_sf(key_sf) {
     _cset = correction::CorrectionSet::from_file(fname.c_str());
+}
+
+JER_correctionlib_weight::~JER_correctionlib_weight() {
+    // NOTE: The matching efficiency will only be calculated and displayed if the RDF event loop is triggered.
+    //       If only lazy actions are performed on the RDF, then the function that increments these values will
+    //       not be triggered. If you see -nan% and did not trigger the RDF event loop, don't be alarmed!!
+    float fraction = _matched/_total * 100.;
+    std::cout << "[JER_correctionlib_weight] Gen matching efficiency = " << fraction << "%" << std::endl;
+    std::cout << "\tTotal number of RECO jets matched to a GEN jet: " << _matched << std::endl;
+    std::cout << "\tTotal number of RECO jets analyzed:             " << _total << std::endl;
 }
 
 LorentzV JER_correctionlib_weight::match(LorentzV& jet, RVec<LorentzV> genJets, float resolution) {
