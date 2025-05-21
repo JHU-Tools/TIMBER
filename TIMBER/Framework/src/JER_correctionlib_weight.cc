@@ -95,6 +95,7 @@ class JER_correctionlib_weight {
                     float jet_sf;
                     std::map<std::string, correction::Variable::Type> sfMap {
                         {"JetEta", jets[ijet].eta},
+                         {"JetPt", jets[ijet].pt},
                         {"systematic", variation}
                     };
                     correction::Correction::Ref ref_sf = _cset->at(_key_sf);
