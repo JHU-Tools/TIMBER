@@ -206,7 +206,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         CompileCpp('TIMBER/Framework/src/JERC_JetVeto.cc')
         CompileCpp(f'JERC_JetVeto jet_vetoer = JERC_JetVeto("{fname_vetomap}","{key_vetomap}");')
         a.Define('jetmap_vetoed_events',f'jet_vetoer.eval(Jets)')   # Pass in the TIMBER-created struct for the AK4 jets ("Jet"+"s")
-        a.Cut('JERC_jet_veto','jetmap_vetoed_events == 1')
+        a.Cut('JERC_jet_veto','jetmap_vetoed_events == 0')
 
 
     print('\n----------------------------------------------------------------------------------------')
