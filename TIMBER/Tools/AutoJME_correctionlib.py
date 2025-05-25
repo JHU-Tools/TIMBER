@@ -100,7 +100,9 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         found = False
         keysData = [k for k in keys if 'DATA' in k]
         for k in keysData: 
-            era = k.split('_')[1]
+            idx_start = k.find("Run")
+            idx_end = k.find("_", idx_start)
+            era = k[idx_start : idx_end]
             if dataEra in era: 
                 found = True
                 key = k
