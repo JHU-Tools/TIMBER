@@ -41,7 +41,7 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     print('----------------------------------------------------------------------------------------')
     print('--------------------------- Starting AutoJME -------------------------------------------')
     print('----------------------------------------------------------------------------------------')
-
+    print("TEST")
     print(f'\nStep 1: JES corrections...')
 
     if ((a.isData) and (dataEra == '')):
@@ -94,21 +94,24 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
     print("\nLoading JSON file: {}".format(fname_jes))
     cset_jes = core.CorrectionSet.from_file(fname_jes)
     keys = list(cset_jes.compound.keys()) # NOTE: we are using "cset_jes.compound" here b/c individual JEC levels have not been implemented for AutoJME, and we are just using the compound "L1L2L3Res" JEC level
-
+    print(keys)
     # Find the appropriate CorrectionSet key for Data or MC
     if (a.isData):
         found = False
         keysData = [k for k in keys if 'DATA' in k]
-        for k in keysData: 
-            idx_start = k.find("Run")
-            idx_end = k.find("_", idx_start)
-            era = k[idx_start : idx_end]
-            if dataEra in era: 
-                found = True
-                key = k
-                break
-        if not found:
-            raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
+        if "2022" in year:
+            for k in keysData:
+                idx_start = k.find("Run") 
+                idx_end = k.find("_", idx_start)
+                era = k[idx_start : idx_end]
+                if dataEra in era: 
+                    found = True
+                    key = k
+                    break
+            if not found:
+                raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
+        elif "2023" in year:
+            key = keysData[0]
     else:
         # There is only one compound key in the JSON for MC
         key = [k for k in keys if 'MC' in k][0]
@@ -122,13 +125,13 @@ def AutoJME(a, jetCollection, year, dataEra='', calibrate=True):
         [fname_jes, key, key.replace(level,unc), a.isData], 
         corrtype='Calibration'
     )
-    
     evalargs = {
         jes: {
             "pt": f"{jetCollection}_pt",
             "eta": f"{jetCollection}_eta",
             "phi": f"{jetCollection}_phi",
             "area": f"{jetCollection}_area",
+            "run":  "run",
             "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
         }
     }
