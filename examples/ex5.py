@@ -60,12 +60,12 @@ a.Apply([myCuts,myVars,topCuts])
 # Add a correction
 lead_sjbt_corr = Correction('lead_sjbtag_corr',
                        'TIMBER/Framework/src/SJBtag_SF.cc',
-                       ['16','"DeepCSV"','"loose"'])
+                       [16,"DeepCSV","loose"])
 # Clone it and make the sublead version (cpObj to use same object instance of SJBtag_SF class)
 sublead_sjbt_corr = lead_sjbt_corr.Clone('sublead_sjbtag_corr')
 # Add both
-a.AddCorrection(lead_sjbt_corr, evalArgs=['FatJet_pt[0]','FatJet_eta[0]'])
-a.AddCorrection(sublead_sjbt_corr, evalArgs=['FatJet_pt[1]','FatJet_eta[1]'])
+a.AddCorrection(lead_sjbt_corr, evalArgs={'pt': 'FatJet_pt[0]', 'eta': 'FatJet_eta[0]'})
+a.AddCorrection(sublead_sjbt_corr,evalArgs={'pt': 'FatJet_pt[1]', 'eta': 'FatJet_eta[1]'})
 
 # Make weights based on the corrections
 a.MakeWeightCols()
@@ -73,5 +73,6 @@ a.MakeWeightCols()
 # Make HistGroup of uncertainty templates and draw them in pdf
 templateGroup = a.MakeTemplateHistos(ROOT.TH1F('mtt','m_{tt}',30,500,3500), 'invariantMass')
 
+#test_templates needs to be created prior to running this
 a.DrawTemplates(templateGroup,'test_templates/')
-a.PrintNodeTree('ex5_tree.png',verbose=True)
+#a.PrintNodeTree('ex5_tree.png',verbose=True)

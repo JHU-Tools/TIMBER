@@ -1,6 +1,4 @@
 # TIMBER {#mainpage}
-[Full Documentation](https://lcorcodilos.github.io/TIMBER/)
-
 TIMBER (Tree Interface for Making Binned Events with RDataFrame) is an easy-to-use and fast python analysis framework used to quickly process CMS data sets. 
 Default arguments assume the use of the NanoAOD format but any ROOT TTree can be processed.
 
@@ -54,29 +52,6 @@ cd CMSSW_12_3_5
 cmsenv
 cd ..
 ```
-
-## Quick install
-Despite the fact that Python 2.7 reached end-of-life on January 1st, 2020, it is still the dominant
-version used by CMS. If you need CMSSW (ex. for JME modules), Python 2.7 is recommended. Otherwise,
-please take this opportunity to start using Python 3! Remember to make sure your 
-ROOT version has been built with Python 3 compatibility. For information on how to do this, see
-[this explanation](doxysetup/Python3.md). Though this does not always work consistently when CMSSW code is needed.
-
-Working in a virtual environment is also recommended. Below are the commands for using virtualenv but
-you're obviously free to use your favorite tool for the job (you can install virtualenv for Python 3 with 
-`pip install virtualenv` (`pip3` for Python 3)).
-
-```
-python -m virtualenv timber-env
-source timber-env/bin/activate
-git clone https://github.com/ammitra/TIMBER.git
-cd TIMBER
-source setup.sh
-```
-
-Some C++ modules also have the [boost library](https://www.boost.org/) as a dependency.
-The internet has plenty instructions on how to install boost. The standard `apt-get`
-(Ubuntu) and `brew` (macOS) package managers support install as well.
 
 ## The RDataFrame Backbone
 TIMBER's speed comes from the use of 
