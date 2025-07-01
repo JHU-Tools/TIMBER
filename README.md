@@ -11,8 +11,8 @@ cmsrel CMSSW_13_2_10
 cd CMSSW_13_2_10
 cmsenv
 cd ..
-python3 -m venv timber-env
-git clone git@github.com:JHU-Tools/TIMBER.git
+python3 -m virtualenv timber-env
+git clone -b alternative_install git@github.com:JHU-Tools/TIMBER.git
 cd TIMBER/
 mkdir bin
 cd bin

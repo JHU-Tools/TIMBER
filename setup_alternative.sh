@@ -5,15 +5,6 @@ if [[ "$VIRTUAL_ENV" == "" ]]; then
   return
 fi
 
-pip install --timeout=10 \
-  decorator>=4.4.2 \
-  pyparsing>=2.4.7 \
-  pydot>=1.4.1 \
-  networkx>=2.2 \
-  clang>=6.0.0.2 \
-  numpy>=1.16.6 \
-  "pandas>=0.24.2,<2.0"
-
 pip install -e .
 
 # Add TIMBERPATH to activate script if not already there
