@@ -9,7 +9,8 @@ pip install -e .
 
 # Add TIMBERPATH to activate script if not already there
 activate_path=$VIRTUAL_ENV/bin/activate
-TIMBERPATH="$PWD"
+TIMBERPATH="$PWD/"
+export TIMBERPATH="$TIMBERPATH"
 
 if ! grep -q "$TIMBERPATH" "$activate_path"; then
   echo "export TIMBERPATH=${TIMBERPATH}" >> "$activate_path"
