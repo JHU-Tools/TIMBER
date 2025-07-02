@@ -12,7 +12,7 @@ cd CMSSW_13_2_10
 cmsenv
 cd ..
 python3 -m virtualenv timber-env #If this step fails, you might need to do `python3 -m pip install --user virtualenv`
-git clone -b alternative_install git@github.com:JHU-Tools/TIMBER.git
+git clone git@github.com:JHU-Tools/TIMBER.git
 cd TIMBER/
 mkdir bin
 cd bin
@@ -45,6 +45,9 @@ source timber-env/bin/activate
 cd TIMBER
 source setup_alternative.sh
 ```
+
+After installation, each new shell only requires `cmsenv` and `source timber-env/bin/activate`
+
 
 Tip: Add the lines below to the top of `timber-env/bin/activate` script. With this, one can skip doing `cmsenv` every time after opening a new shell and just activate the environment instead.
 ```
