@@ -4,7 +4,7 @@ Default arguments assume the use of the NanoAOD format but any ROOT TTree can be
 
 ## Installation instructions for python3
 
-These instructions use python3 and CMSSW. The instructions below have been tested on el8 (lxplus and lpc).
+These instructions use python3 and CMSSW. The instructions below have been tested on el8 and el9, both lxplus and lpc.
 
 ```
 cmsrel CMSSW_13_2_10
@@ -20,7 +20,7 @@ git clone git@github.com:fmtlib/fmt.git
 cd ../..
 ```
 
-Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand. Testing to see if this wworks on lpc and lxplus el8/el9
+Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand.
 
 Copy the whole multi-line string to the environment activation script
 
