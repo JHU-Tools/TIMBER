@@ -16,7 +16,7 @@ file_name = 'root://cms-xrd-global.cern.ch//store/mc/RunIISummer16NanoAODv6/TT_T
 
 # Import the C++
 CompileCpp('TIMBER/Framework/include/common.h') # Compile (via gInterpreter) commonly used c++ code
-CompileCpp('TIMBER/examples/example.cc') # Compile a full file
+CompileCpp(os.environ["TIMBERPATH"]+'examples/example.cc') # Compile a full file 
 
 # Create analyzer instance
 a = analyzer(file_name)
