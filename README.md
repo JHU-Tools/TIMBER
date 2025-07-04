@@ -40,8 +40,8 @@ else
   echo 'BOOSTPATH added to PATH'
 fi
 
-if [[ "${CMSSW_BASE}" ]]; then
-    export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$(correction config --incdir)
+if [[ "\${CMSSW_BASE}" ]]; then
+    export ROOT_INCLUDE_PATH=\$ROOT_INCLUDE_PATH:\$(correction config --incdir)
     echo 'correctionlib libraries added to ROOT_INCLUDE_PATH'
 fi
 
