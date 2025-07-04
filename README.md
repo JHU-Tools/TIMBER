@@ -25,15 +25,21 @@ Boost library path (the boost version as well!) may change depending on the CMSS
 Copy the whole multi-line string to the environment activation script
 
 ```
-cat <<EOT >> timber-env/bin/activate
+cat <<'EOT' >> timber-env/bin/activate
 
-export BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc10/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/lib
-if grep -q '\${BOOSTPATH}' <<< '\${LD_LIBRARY_PATH}'
-then
-  echo 'BOOSTPATH already on LD_LIBRARY_PATH'
+if [[ "\$SCRAM_ARCH" == "el8_amd64_gcc12" ]]; then
+  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc12/external/boost/1.78.0-26ff3be5a9865647d0222836b323286c/lib
+elif [[ "\$SCRAM_ARCH" == "el9_amd64_gcc11" ]]; then
+  BOOSTPATH=/cvmfs/cms.cern.ch/el9_amd64_gcc11/external/boost/1.78.0-c49033d06e1a3bf1beac1c01e1ef27d6/lib
 else
-  export LD_LIBRARY_PATH=\${LD_LIBRARY_PATH}:\${BOOSTPATH}
-  echo 'BOOSTPATH added to PATH'
+  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc10/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/lib
+fi
+
+if [[ ":\$LD_LIBRARY_PATH:" != *":\$BOOSTPATH:"* ]]; then
+  export LD_LIBRARY_PATH="\${LD_LIBRARY_PATH:+\$LD_LIBRARY_PATH:}\$BOOSTPATH"
+  echo "BOOSTPATH added to LD_LIBRARY_PATH"
+else
+  echo "BOOSTPATH already on LD_LIBRARY_PATH"
 fi
 EOT
 ```
@@ -43,7 +49,7 @@ This will activate the python3 environment, set a proper LD_LIBRARY_PATH for boo
 ```
 source timber-env/bin/activate
 cd TIMBER
-source setup_alternative.sh
+source setup.sh
 ```
 
 After installation, each new shell only requires `cmsenv` and `source timber-env/bin/activate`
