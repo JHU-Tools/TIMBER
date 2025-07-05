@@ -27,8 +27,8 @@ Copy the whole multi-line string to the environment activation script
 ```
 cat <<EOT >> timber-env/bin/activate
 export SCRAM_ARCH=${SCRAM_ARCH}
-if [[ "\$SCRAM_ARCH" == "el8_amd64_gcc12" ]]; then
-  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc12/external/boost/1.78.0-26ff3be5a9865647d0222836b323286c/lib
+if [[ "\$SCRAM_ARCH" == "el8_amd64_gcc11" ]]; then
+  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc11/external/boost/1.78.0-dfb1dc972d1e1af822bb548909730506/lib
 elif [[ "\$SCRAM_ARCH" == "el9_amd64_gcc11" ]]; then
   BOOSTPATH=/cvmfs/cms.cern.ch/el9_amd64_gcc11/external/boost/1.78.0-c49033d06e1a3bf1beac1c01e1ef27d6/lib
 else
