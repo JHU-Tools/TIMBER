@@ -5,7 +5,7 @@ BIN_DIR=bin/libtimber/
 FMT_DIR=bin/fmt/include/
 
 CC=gcc
-INCLUDE=-I/usr/include/ -I bin/ -I./ `root-config --cflags --ldflags --glibs` -I/usr/include/ -I$(EXT_DIR) -I$(FMT_DIR)
+INCLUDE=-I/usr/include/ -I bin/ -I./ `root-config --cflags --ldflags --glibs` -I$(EXT_DIR) -I$(FMT_DIR)
 
 LIBS=-lstdc++ -lboost_wserialization -lboost_filesystem -L bin/libarchive/lib/ -Wl,-rpath=bin/libarchive/lib/ -larchive
 

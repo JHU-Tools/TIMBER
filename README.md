@@ -25,8 +25,8 @@ Boost library path (the boost version as well!) may change depending on the CMSS
 Copy the whole multi-line string to the environment activation script
 
 ```
-cat <<'EOT' >> timber-env/bin/activate
-
+cat <<EOT >> timber-env/bin/activate
+export SCRAM_ARCH=${SCRAM_ARCH}
 if [[ "\$SCRAM_ARCH" == "el8_amd64_gcc12" ]]; then
   BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc12/external/boost/1.78.0-26ff3be5a9865647d0222836b323286c/lib
 elif [[ "\$SCRAM_ARCH" == "el9_amd64_gcc11" ]]; then
