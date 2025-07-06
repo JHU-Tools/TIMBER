@@ -1,37 +1,24 @@
 #!/usr/bin/env bash
-if [[ "$VIRTUAL_ENV" == "" ]]
-then
+
+if [[ "$VIRTUAL_ENV" == "" ]]; then
   echo "ERROR: Create and activate a virtual environment and try again"
   return
 fi
 
-# if ! command -v dot &> /dev/null
-# then
-#   echo "dot (graphviz) could not be found. Please install it first... (on Ubuntu 'sudo apt-get install graphviz libgraphviz-dev')"
-#   return
-# fi
+pip install -e .
 
-# Hack to downgrade setuptools so that it doesn't complain during setup.py
-pip install --force-reinstall -v "setuptools==70.0.0"
-
-python setup.py develop
+# Add TIMBERPATH to activate script if not already there
 activate_path=$VIRTUAL_ENV/bin/activate
-export TIMBERPATH="$PWD/"
+TIMBERPATH="$PWD/"
+export TIMBERPATH="$TIMBERPATH"
 
-if grep -q $TIMBERPATH $activate_path
-then
-  echo "TIMBER path already in activate"
-else 
-  printf "\n\n" > activate_ext.sh.cpy
-  echo "export TIMBERPATH=${TIMBERPATH}" >> activate_ext.sh.cpy
-  cat activate_ext.sh >> activate_ext.sh.cpy
-  source activate_ext.sh.cpy
-  cat activate_ext.sh.cpy >> $activate_path
-  rm activate_ext.sh.cpy
+if ! grep -q "$TIMBERPATH" "$activate_path"; then
+  echo "export TIMBERPATH=${TIMBERPATH}" >> "$activate_path"
+  echo "Added TIMBERPATH to $activate_path"
 fi
 
-if [ ! -d "bin/libarchive" ] 
-then
+# Clone and build libarchive if not present
+if [ ! -d "bin/libarchive" ]; then
   git clone -b v3.6.2 https://github.com/libarchive/libarchive.git
   cd libarchive
   cmake . -DCMAKE_INSTALL_PREFIX=../bin/libarchive
@@ -41,7 +28,7 @@ then
   rm -rf libarchive
 fi
 
-if [ ! -d "bin/libtimber" ]
-then
+# Build libtimber if not present
+if [ ! -d "bin/libtimber" ]; then
   make
 fi
