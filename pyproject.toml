@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TIMBER"
+version = "1.0.0"
+description = "Tree Interface for Making Binned Events with RDataFrame"
+readme = "README.md"
+requires-python = ">=3.6"
+authors = [
+  { name="mrogulji", email="matej.roguljic@gmail.com" }
+]
+license = { text = "MIT" }
+dependencies = [
+  "decorator>=4.4.2",
+  "pyparsing>=2.4.7",
+  "pydot>=1.4.1",
+  "networkx>=2.2",
+  "clang>=6.0.0.2",
+  "numpy>=1.16.6",
+  "pandas>=0.24.2,<2.0"
+]
+
+[project.urls]
+homepage = "https://github.com/JHU-Tools/TIMBER/tree/master"
