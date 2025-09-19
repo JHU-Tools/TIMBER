@@ -1023,6 +1023,8 @@ class analyzer(object):
             histtitle = '%s__%s'%(baseTitle,cname.replace('weight__','').replace('__nominal',''))
 
             # Build the tuple to give as argument for template
+            if len(binningTuple) == 4:
+                binningTuple = (binningTuple[0], array.array("d", numpy.array(binningTuple[1])), binningTuple[2], array.array("d", numpy.array(binningTuple[3])))
             template_attr = (histname,histtitle) + binningTuple
 
             if dimension == 1: 
