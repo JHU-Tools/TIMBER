@@ -1,6 +1,6 @@
 #include "../include/common.h"
-#include "libarchive/include/archive.h"
-#include "libarchive/include/archive_entry.h"
+#include <archive.h>
+#include <archive_entry.h>
 
 TFile *hardware::Open(std::string file, bool inTIMBER, const char* option){
     if (inTIMBER) {

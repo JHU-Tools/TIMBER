@@ -12,14 +12,16 @@ authors = [
   { name="mrogulji", email="matej.roguljic@gmail.com" }
 ]
 license = { text = "MIT" }
+
+#Numpy compatible with ROOT docker rootproject/root:6.30.02-alma9
 dependencies = [
   "decorator>=4.4.2",
   "pyparsing>=2.4.7",
   "pydot>=1.4.1",
   "networkx>=2.2",
   "clang>=6.0.0.2",
-  "numpy>=1.16.6",
-  "pandas>=0.24.2,<2.0"
+  "numpy==1.20.1",
+  "pandas>=1.2,<2.0"
 ]
 
 [project.urls]

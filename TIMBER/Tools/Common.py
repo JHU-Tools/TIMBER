@@ -246,7 +246,10 @@ def CompileCpp(blockcode,library=False):
             ROOT.gSystem.Load('libCondFormatsJetMETObjects')
 
     if not ROOT.gInterpreter.IsLibraryLoaded(os.environ["TIMBERPATH"]+'bin/libtimber/libtimber.so'):
-        ROOT.gSystem.Load(os.environ["TIMBERPATH"]+'bin/libarchive/lib/libarchive.so')
+        libarchive_path = os.path.join(os.environ["TIMBERPATH"], "bin/libarchive/lib/libarchive.so")
+        #Docker installation installs libarchive system-wide so we only load the local copy if it exists.
+        if os.path.exists(libarchive_path):
+            ROOT.gSystem.Load(libarchive_path)
         ROOT.gSystem.Load(os.environ["TIMBERPATH"]+'bin/libtimber/libtimber.so')
 
     if not library:

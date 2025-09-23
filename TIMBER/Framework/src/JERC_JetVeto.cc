@@ -1,4 +1,3 @@
-// Requires CMSSW
 /**
  * Class to handle the treatment of jet veto maps for Run 3 analyses.
  * Following the JERC guidelines here: https://cms-jerc.web.cern.ch/Recommendations/#jet-veto-maps 
@@ -24,6 +23,7 @@
 
 #include <correction.h>
 #include <ROOT/RVec.hxx>
+#include <iostream>
 
 using ROOT::VecOps::RVec;
 
