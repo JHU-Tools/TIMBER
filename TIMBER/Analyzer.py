@@ -201,24 +201,24 @@ class analyzer(object):
             if ROOT.TFile.Open(f,'READ') == None:
                 raise ReferenceError('File %s does not exist'%f)	    
             tempF = ROOT.TFile.Open(f,'READ')
-        # Check if Events tree name is in the file
-        existingTrees = tempF.GetListOfKeys()
-        treeNames = [i.GetName() for i in existingTrees]
-        if self._eventsTreeName not in treeNames:
-            print('WARNING: The following file does NOT contain an Events TTree, skipping.\n\tFile: {}'.format(f))
-            pass
-        elif tempF.Get(self._eventsTreeName).GetEntriesFast() != 0:
-            self._eventsChain.Add(f)
-        elif tempF.Get(self._eventsTreeName).GetEntriesFast() == 0:
-            if self.skipEmpty:
-                print("WARNING: The following file contains an empty Events TTree, skipping. If you wish to add regardless, please call the analyzer with 'skipEmpty=False'\n\tFile: {}".format(f))
+            # Check if Events tree name is in the file
+            existingTrees = tempF.GetListOfKeys()
+            treeNames = [i.GetName() for i in existingTrees]
+            if self._eventsTreeName not in treeNames:
+                print('WARNING: The following file does NOT contain an Events TTree, skipping.\n\tFile: {}'.format(f))
                 pass
-        else:
-            print("WARNING: The following file contains an empty Events TTree, adding to analyzer regardless. If you wish to skip, please call analyzer with 'skipEmpty=True' (default).\n\tFile: {}".format(f))
-            self._eventsChain.Add(f)
-        if tempF.Get(self._runTreeName) != None:
-            self.RunChain.Add(f)
-            tempF.Close()
+            elif tempF.Get(self._eventsTreeName).GetEntriesFast() != 0:
+                self._eventsChain.Add(f)
+            elif tempF.Get(self._eventsTreeName).GetEntriesFast() == 0:
+                if self.skipEmpty:
+                    print("WARNING: The following file contains an empty Events TTree, skipping. If you wish to add regardless, please call the analyzer with 'skipEmpty=False'\n\tFile: {}".format(f))
+                    pass
+                else:
+                    print("WARNING: The following file contains an empty Events TTree, adding to analyzer regardless. If you wish to skip, please call analyzer with 'skipEmpty=True' (default).\n\tFile: {}".format(f))
+                    self._eventsChain.Add(f)
+            if tempF.Get(self._runTreeName) != None:
+                self.RunChain.Add(f)
+                tempF.Close()
         elif f.endswith(".txt"): 
             txt_file = open(f,"r")
             for l in txt_file.readlines():
