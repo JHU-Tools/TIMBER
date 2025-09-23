@@ -1,71 +1,27 @@
-# TIMBER {#mainpage}
+# TIMBER
 TIMBER (Tree Interface for Making Binned Events with RDataFrame) is an easy-to-use and fast python analysis framework used to quickly process CMS data sets. 
 Default arguments assume the use of the NanoAOD format but any ROOT TTree can be processed.
 
-## Installation instructions for python3
+## Installation instructions
 
-These instructions use python3 and CMSSW. The instructions below have been tested on el8 and el9, both lxplus and lpc.
+This branch (`Run3_docker`) is specifically prepared for Docker-based workflows and pre-built images.  
+It ensures all dependencies, including ROOT, Boost, libarchive, and TIMBER itself, are correctly installed without the need for local compilation.
 
-```
-cmsrel CMSSW_13_2_10
-cd CMSSW_13_2_10
-cmsenv
-cd ..
-python3 -m virtualenv timber-env #If this step fails, you might need to do `python3 -m pip install --user virtualenv`
-git clone git@github.com:JHU-Tools/TIMBER.git
-cd TIMBER/
-mkdir bin
-cd bin
-git clone git@github.com:fmtlib/fmt.git
-cd ../..
+### Pull the pre-built Docker image
+
+```bash
+docker pull mrogulji/timber:run3
+docker run --rm -it -v /path/to/your/data:/work/data mrogulji/timber:run3 bash
 ```
 
-Boost library path (the boost version as well!) may change depending on the CMSSW version so this may need to be modified by hand.
+- /path/to/your/data should point to your local data folder (bind mount).
+- Inside the container, TIMBERPATH is already set, and libtimber is built.
 
-Secondly, if operating on a cluster (e.g. FNAL LPC or CERN LXPLUS) and in a CMSSW environment, it is beneficial to have the CMSSW's [`correctionlib`](https://cms-nanoaod.github.io/correctionlib/) C++ libraries included. This is obtained by adding the path to the correctionlib include directory to the `ROOT_INCLUDE_PATH` environment variable.
-
-This can all be automated by copying the whole following multi-line string to the environment activation script:
-
-```
-cat <<EOT >> timber-env/bin/activate
-export SCRAM_ARCH=${SCRAM_ARCH}
-if [[ "\$SCRAM_ARCH" == "el8_amd64_gcc11" ]]; then
-  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc11/external/boost/1.78.0-dfb1dc972d1e1af822bb548909730506/lib
-elif [[ "\$SCRAM_ARCH" == "el9_amd64_gcc11" ]]; then
-  BOOSTPATH=/cvmfs/cms.cern.ch/el9_amd64_gcc11/external/boost/1.78.0-c49033d06e1a3bf1beac1c01e1ef27d6/lib
-else
-  BOOSTPATH=/cvmfs/cms.cern.ch/el8_amd64_gcc10/external/boost/1.78.0-0d68c45b1e2660f9d21f29f6d0dbe0a0/lib
-fi
-
-if [[ ":\$LD_LIBRARY_PATH:" != *":\$BOOSTPATH:"* ]]; then
-  export LD_LIBRARY_PATH="\${LD_LIBRARY_PATH:+\$LD_LIBRARY_PATH:}\$BOOSTPATH"
-  echo "BOOSTPATH added to LD_LIBRARY_PATH"
-else
-  echo "BOOSTPATH already on LD_LIBRARY_PATH"
-fi
-
-if [[ "\${CMSSW_BASE}" ]]; then
-    export ROOT_INCLUDE_PATH=\$ROOT_INCLUDE_PATH:\$(correction config --incdir)
-    echo 'correctionlib libraries added to ROOT_INCLUDE_PATH'
-fi
-
-EOT
-```
-
-The following lines will activate the python3 environment, set a proper LD_LIBRARY_PATH for boost libraries and build the TIMBER binaries.
+### LPC example with singularity
 
 ```
-source timber-env/bin/activate
-cd TIMBER
-source setup.sh
-```
-
-After installation, each new shell only requires `cmsenv` and `source timber-env/bin/activate`
-
-
-Tip: Add the lines below to the top of `timber-env/bin/activate` script. With this, one can skip doing `cmsenv` every time after opening a new shell and just activate the environment instead.
-```
-cd CMSSW_13_2_10
-cmsenv
-cd ..
+APPTAINER_CACHEDIR=/tmp/apptainer_build_cache apptainer pull timber_run3.sif docker://mrogulji/timber:run3 #Build the .sif image
+singularity shell  --bind `readlink $HOME` --bind `readlink -f ${HOME}/nobackup/` --bind /uscms_data --bind /cvmfs  timber_run3.sif #Open an interactive shell
+singularity exec --bind `readlink $HOME`,`readlink -f ${HOME}/nobackup/`,/uscms_data,/cvmfs timber_run3.sif python3 $SCRIPT_PATH #Running a python script
+singularity exec --bind `readlink $HOME`,`readlink -f ${HOME}/nobackup/`,/uscms_data,/cvmfs timber_run3.sif /bin/bash $SCRIPT_PATH #Running a shell script
 ```

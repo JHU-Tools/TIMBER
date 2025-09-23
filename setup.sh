@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
+set -e
 
-# Set TIMBERPATH
-export TIMBERPATH="$PWD/"
-echo "TIMBERPATH set to $TIMBERPATH"
+# Install TIMBER in editable mode
 pip3 install -e .
 
 # Build libtimber if not present
