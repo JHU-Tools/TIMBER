@@ -32,7 +32,7 @@ RVec<float> BTagging_correctionlib_weight::eval(int flavor, float eta, float pt,
             correction::Correction::Ref ref  = _cset->at(_key);
 
             // Inputs for both SF and uncertainty 
-            RVec<string> variations {"central", "up_jes", "down_jes"};
+            RVec<std::string> variations {"central", "up_jes", "down_jes"};
             for(int i = 0; i < 3; i++){
                 std::vector<correction::Variable::Type> inputs;
                 inputs.push_back(variations.at(i));
