@@ -31,7 +31,7 @@ RVec<float> PileUp_correctionlib_weight::eval(float Pileup_nTrueInt) {
             correction::Correction::Ref ref  = _cset->at(_key);
 
             // Inputs for both SF and uncertainty 
-            RVec<string> variations {"nominal", "up", "down"};
+            RVec<std::string> variations {"nominal", "up", "down"};
             for(int i = 0; i < 3; i++){
                 std::vector<correction::Variable::Type> inputs;
                 inputs.push_back(Pileup_nTrueInt);
