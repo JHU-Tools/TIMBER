@@ -8,6 +8,8 @@ from TIMBER.CollectionOrganizer import CollectionOrganizer
 from TIMBER.Tools.Common import GenerateHash, GetHistBinningTuple, CompileCpp, ConcatCols, GetStandardFlags, ExecuteCmd, LoadColumnNames, ProgressBar
 from clang import cindex
 from collections import OrderedDict
+import array
+import numpy
 
 import ROOT
 import pprint, copy, os, subprocess, textwrap, re, glob
