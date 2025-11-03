@@ -218,7 +218,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
                 a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
 
         # Now apply veto maps to Data and MC (Run 3 ONLY)
-        if (y > 2018):
+        if (y > 2018 and jetCollection == "Jet"):
             print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
             fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
             cset_vetomap = core.CorrectionSet.from_file(fname_vetomap)
