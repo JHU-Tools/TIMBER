@@ -696,6 +696,7 @@ def rebin_TH1(h, bins, name = "default"):
         name = h.GetName() + "_merged"
     title = h.GetTitle() 
     h_merged = ROOT.TH1D(name, title, len(bins) - 1, bins)
+    h_merged.Sumw2()
     for i in range(len(bins) - 1):
         value = 0
         sigma = 0
@@ -750,6 +751,7 @@ def rebin_TH2(h, xbins, ybins, name = "default"):
     if name == "default":
         name = h.GetName() + "_merged"
     h_merged = ROOT.TH2D(name, title, len(xbins) - 1, xbins, len(ybins) - 1, ybins)
+    h_merged.Sumw2()
     for i in range(len(xbins) - 1):
         for j in range(len(ybins) - 1):
             value = 0
