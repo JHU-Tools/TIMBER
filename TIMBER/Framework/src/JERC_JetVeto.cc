@@ -48,7 +48,7 @@ class JERC_JetVeto {
             _total++;       // Increment the number of events studied
             for (size_t ijet = 0; ijet < jets.size(); ijet++) {
                 // First check whether we the jet passes the nominal "loose selection"
-                bool jet_passes = (jets[ijet].pt > 15) && (jets[ijet].jetId == 6) && ((jets[ijet].chEmEF + jets[ijet].neEmEF) < 0.9);
+                bool jet_passes = (jets[ijet].pt > 15) && (jets[ijet].jetId_corr == 6) && ((jets[ijet].chEmEF + jets[ijet].neEmEF) < 0.9);
                 if (jet_passes) {   // Consult jet veto map
                     // First impose checks on valid eta and phi. The eta/phi variables have a certain allowed range in correctionlib and will fail if passed a value outside that range.
                     if (abs(jets[ijet].eta) > 5.191) {continue;}
