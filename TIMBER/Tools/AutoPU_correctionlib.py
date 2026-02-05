@@ -5,7 +5,7 @@ from TIMBER.Tools.Common import GetJMETag, CompileCpp
 from TIMBER.Analyzer import Correction
 import correctionlib
 import ROOT
-
+import os
 '''
 Should you wish to use a custom-named collection derived from the FatJet or Jet
 collections, it is advisable to modify them in the script from which you call 
@@ -22,6 +22,8 @@ def AutoPU(a, year):
     json = 'puWeights'
 
     fname = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/LUM/{year}/{json}.json.gz"
+    if "2024" in year: #################AD HOC SOLUTION!!!
+        fname = os.path.dirname(os.path.abspath(__file__)) + f"/2024_pu_json/puweights_2024.json"
 
 
     
