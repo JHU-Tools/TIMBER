@@ -18,7 +18,7 @@ AutoJME, for example:
 AK8collection = "FatJet"
 AK4collection = "Jet"
 
-def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
+def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras = [], AK8Calib_extras = []):
     '''
     @param a (analyzer): TIMBER analyzer object to be manipulated and returned.
     @param jetCollection (str): Name of the jet collection to correct.
@@ -112,6 +112,8 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
                     raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
             elif "2023" in year:
                 key = keysData[0]
+            elif "2024" in year:
+                key = keysData[0]
         else:
             # There is only one compound key in the JSON for MC
             key = [k for k in keys if 'MC' in k][0]
@@ -141,11 +143,15 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
                 f"{jetCollection}_mass":[jes],
                 f"{jetCollection}_msoftdrop":[jes]
             }
+            for AK8_extra in AK8Calib_extras:
+                calibdict[AK8_extra] = [jes]
         elif jetCollection == AK4collection:
             calibdict = {
                 f"{jetCollection}_pt":[jes],
                 f"{jetCollection}_mass":[jes],
             }
+            for AK4_extra in AK4Calib_extras:
+                calibdict[AK4_extra] = [jes]
         
 
         # Create the columns corresponding to the JES variations
@@ -157,6 +163,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
         else:
             # Don't calibrate yet until JER is calcuated
             a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
+
 
 
 
@@ -206,11 +213,15 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True):
                     f"{jetCollection}_mass":[jes, jer],
                     f"{jetCollection}_msoftdrop":[jes, jer]
                 }
+                for AK8_extra in AK8Calib_extras:
+                    calibdict[AK8_extra] = [jes, jer]
             elif jetCollection == AK4collection:
                 calibdict = {
                     f"{jetCollection}_pt":[jes, jer],
                     f"{jetCollection}_mass":[jes, jer],
                 }
+                for AK8_extra in AK8Calib_extras:
+                    calibdict[AK8_extra] = [jes, jer]
 
             if (calibrate):
                 a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
