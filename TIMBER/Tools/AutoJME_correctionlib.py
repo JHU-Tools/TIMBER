@@ -5,45 +5,53 @@ from TIMBER.Tools.Common import GetJMETag, CompileCpp
 from TIMBER.Analyzer import Calibration
 import correctionlib._core as core
 import ROOT
-
-'''
-Should you wish to use a custom-named collection derived from the FatJet or Jet
-collections, it is advisable to modify them in the script from which you call 
-AutoJME, for example:
-
-    from TIMBER.Tools.Common import AutoJME
-    AutoJME.AK8collection = "myCustomAK8collection"
-    AutoJME.AutoJME(analyzer, "myCustomAK8collection", 2017, '', True)
-'''
-AK8collection = "FatJet"
-AK4collection = "Jet"
+################################################
+#This module is only validated with Run3 NanoAOD_v15 datasets.
+################################################
 
 def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras = [], AK8Calib_extras = []):
     '''
     @param a (analyzer): TIMBER analyzer object to be manipulated and returned.
-    @param jetCollection (str): Name of the jet collection to correct.
-        The default jet collections in NanoAOD are FatJet (AK8) and Jet (AK4).
-        However, you can also pass a custom collection built from either of these by changing the AK8/AK4collection values above.
+    @param jetCollections (str list): Names of the jet collection to correct. For example, it can take ["FatJet"], ["Jet"] or ["FatJet", "Jet"]
     @param year (str): Year associated with the input files to the analyzer
         Run 2 options: 2016preVFP_UL/EOY, 2016postVFP_UL/EOY, 2017_UL/EOY, 2018_UL/EOY
-        Run 3 options: 2022_Prompt, 2022_Summer22, 2022_Summer22EE, 2023_Summer23, 2023_Summer23BPix, 2024_Winter24
+        Run 3 options: 2022_Prompt, 2022_Summer22, 2022_Summer22EE, 2023_Summer23, 2023_Summer23BPix, 2024_Summer24, 2024_Winter24
     @param dataEra (str): If providing data, include the "era" (e.g. A,B,C,D,..)
     @param calibrate (bool): Whether to calibrate the pT and masses of the jets in the event using HadamardProduct. If False, then only produce the uncertainty columns
-
+    @param AK4Calib_extras (str list): The extra NanoAOD columns of AK4 jets you want to calibrate. DON'T feed Raw values.
+    @param AK8Calib_extras (str list): The extra NanoAOD columns of AK8 jets you want to calibrate. DON'T feed Raw values.
     Raises:
         ValueError: Provided JetCollection does not exist in the analyzer's stored list of collections
         ValueError: Provided dataEra does not exist for the input year
-        ValueError: Requested AK8 corrections for 2024_Winter24 (only AK4 corrections so far - Feb. 7, 2025)
 
     Returns:
         analyzer: Manipulated version of the input analyzer object.
     '''
+    AK8collection = "FatJet"
+    AK4collection = "Jet"
     print('----------------------------------------------------------------------------------------')
     print('--------------------------- Starting AutoJME -------------------------------------------')
     print('----------------------------------------------------------------------------------------')
-    print("TEST")
-    print(f'\nStep 1: JES corrections...')
 
+
+    print(f'\nStep 0: Calculate RAW value...')
+    CompileCpp('TIMBER/Framework/src/getRawVal.cc')
+    for jetCollection in jetCollections:
+        if jetCollection == AK8collection:
+            a.Define("FatJet_msoftdrop_raw", "getRawVal(nFatJet, FatJet_msoftdrop, FatJet_rawFactor)")
+            a.Define("FatJet_pt_raw", "getRawVal(nFatJet, FatJet_pt, FatJet_rawFactor)")
+            for extra in AK8Calib_extras:
+                a.Define(f"{extra}_raw", f"getRawVal(nFatJet, {extra}, FatJet_rawFactor)")
+                 
+        if jetCollection == AK4collection:
+            self.analyzer.Define("Jet_mass_raw", "getRawVal(nJet, Jet_mass, Jet_rawFactor)")
+            self.analyzer.Define("Jet_pt_raw", "getRawVal(nJet, Jet_pt, Jet_rawFactor)")
+            for extra in AK4Calib_extras:
+                a.Define(f"{extra}_raw", f"getRawVal(nJet, {extra}, Jet_rawFactor)")
+
+
+
+    print(f'\nStep 1: JES corrections...')
     if ((a.isData) and (dataEra == '')):
         raise ValueError(f'Running on data but no dataEra specified.')
     CompileCpp('TIMBER/Framework/src/JERC_JetVeto.cc')
@@ -76,9 +84,8 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             raise ValueError(f'Jet collection name {jetCollection} not supported. Make sure to set AutoJME.AK8collection or AutoJME.AK4collection if using a custom collection. The collections available in the passed analyzer are: {available_colls}')
 
         # Determine the JEC level
-        levels = ['L1Fastjet', 'L2Relative', 'L3Absolute', 'L2L3Residual'] # NOT IMPLEMENTED YET (and not really needed for most cases)
-        level  = 'L1L2L3Res' # Currently only supporting the compound correction
-        unc    = 'Total'
+        level  = 'L1L2L3Res' # Currently only supporting the compound correction. This will cover all JERC required corretions
+        unc    = 'Total' # Only support Total uncertainty
 
         # Load the CorrectionSet from the file hosted on CVMFS. These files are synced daily, see here: https://gitlab.cern.ch/cms-nanoAOD/jsonpog-integration/-/blob/master/README.md
         fname_jes = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/{json}.json.gz"
@@ -94,6 +101,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         print("\nLoading JSON file: {}".format(fname_jes))
         cset_jes = core.CorrectionSet.from_file(fname_jes)
         keys = list(cset_jes.compound.keys()) # NOTE: we are using "cset_jes.compound" here b/c individual JEC levels have not been implemented for AutoJME, and we are just using the compound "L1L2L3Res" JEC level
+        print("available compound keys:")
         print(keys)
         # Find the appropriate CorrectionSet key for Data or MC
         if (a.isData):
@@ -110,9 +118,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
                         break
                 if not found:
                     raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
-            elif "2023" in year:
-                key = keysData[0]
-            elif "2024" in year:
+            elif "2023" in year or "2024" in year: ###2023 and 2024 only has one data key with no era info
                 key = keysData[0]
         else:
             # There is only one compound key in the JSON for MC
@@ -129,7 +135,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         )
         evalargs = {
             jes: {
-                "pt": f"{jetCollection}_pt",
+                "pt": f"{jetCollection}_pt_raw",
                 "eta": f"{jetCollection}_eta",
                 "phi": f"{jetCollection}_phi",
                 "area": f"{jetCollection}_area",
@@ -139,19 +145,18 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         }
         if jetCollection == AK8collection:    
             calibdict = {
-                f"{jetCollection}_pt":[jes],
-                f"{jetCollection}_mass":[jes],
-                f"{jetCollection}_msoftdrop":[jes]
+                f"{jetCollection}_pt_raw":[jes],
+                f"{jetCollection}_msoftdrop_raw":[jes]
             }
             for AK8_extra in AK8Calib_extras:
-                calibdict[AK8_extra] = [jes]
+                calibdict[f"{AK8_extra}_raw"] = [jes]
         elif jetCollection == AK4collection:
             calibdict = {
-                f"{jetCollection}_pt":[jes],
-                f"{jetCollection}_mass":[jes],
+                f"{jetCollection}_pt_raw":[jes],
+                f"{jetCollection}_mass_raw":[jes],
             }
             for AK4_extra in AK4Calib_extras:
-                calibdict[AK4_extra] = [jes]
+                calibdict[f"{AK4_extra}_raw"] = [jes]
         
 
         # Create the columns corresponding to the JES variations
