@@ -70,6 +70,8 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
                 doMass = True
             else:
                 doMass = False
+            if (y == 2024):
+                json  = 'jet_jerc' ###AD HOC SOLUTION!!!!!!!!!!!: 2024 fatjet json not avaliable, using AK4 jet correction instead
         elif jetCollection == AK4collection:
             if (y <= 2018): # Run 2
                 algo = 'AK4PFchs'
