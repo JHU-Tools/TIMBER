@@ -61,6 +61,7 @@ JER_correctionlib_weight::~JER_correctionlib_weight() {
 
 
 RVec<RVec<float>> JER_correctionlib_weight::eval(int nJet, RVec<float> jet_pt, RVec<float> jet_eta, RVec<float> jet_phi, int nGenJet, RVec<float> genJet_pt, RVec<float> genJet_eta, RVec<float> genJet_phi, float fixedGridRhoFastjetAll){
+    std::cout<<_total<<" "<<_matched<<std::endl;
     RVec< RVec<float> > out (nJet);
     for (size_t ijet = 0; ijet < nJet; ijet++) {
         // Book {nom, up, down} SFs for the jet at index "ijet"

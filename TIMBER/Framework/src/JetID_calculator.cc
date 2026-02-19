@@ -1,5 +1,6 @@
 #include <correction.h>
 #include <ROOT/RVec.hxx>
+using namespace ROOT::VecOps;
 class JetID_calculator{
 public:
     std::unique_ptr<correction::CorrectionSet> _cset;
