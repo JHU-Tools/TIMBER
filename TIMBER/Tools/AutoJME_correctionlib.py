@@ -27,35 +27,38 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
     Returns:
         analyzer: Manipulated version of the input analyzer object.
     '''
+    ########### calibrate=False is not supported anymore. since JER correction requires calibrated JES pt
     AK8collection = "FatJet"
     AK4collection = "Jet"
+    AK8Calibs = ["msoftdrop", "pt"] + AK8Calib_extras
+    AK4Calibs = ["mass", "pt"] + AK4Calib_extras
     print('----------------------------------------------------------------------------------------')
     print('--------------------------- Starting AutoJME -------------------------------------------')
     print('----------------------------------------------------------------------------------------')
 
 
-    print(f'\nStep 0: Calculate RAW value...')
-    CompileCpp('TIMBER/Framework/src/getRawVal.cc')
-    for jetCollection in jetCollections:
-        if jetCollection == AK8collection:
-            a.Define("FatJet_msoftdrop_raw", "getRawVal(nFatJet, FatJet_msoftdrop, FatJet_rawFactor)")
-            a.Define("FatJet_pt_raw", "getRawVal(nFatJet, FatJet_pt, FatJet_rawFactor)")
-            for extra in AK8Calib_extras:
-                a.Define(f"{extra}_raw", f"getRawVal(nFatJet, {extra}, FatJet_rawFactor)")
-                 
-        if jetCollection == AK4collection:
-            self.analyzer.Define("Jet_mass_raw", "getRawVal(nJet, Jet_mass, Jet_rawFactor)")
-            self.analyzer.Define("Jet_pt_raw", "getRawVal(nJet, Jet_pt, Jet_rawFactor)")
-            for extra in AK4Calib_extras:
-                a.Define(f"{extra}_raw", f"getRawVal(nJet, {extra}, Jet_rawFactor)")
 
-
-
-    print(f'\nStep 1: JES corrections...')
     if ((a.isData) and (dataEra == '')):
         raise ValueError(f'Running on data but no dataEra specified.')
+    CompileCpp('TIMBER/Framework/src/getRawVal.cc')
     CompileCpp('TIMBER/Framework/src/JERC_JetVeto.cc')
     for jetCollection in jetCollections:
+
+        
+        print(f'\nStep 0: Calculate RAW value...')
+        if jetCollection == AK8collection:
+            for _calib in AK8Calibs:
+                a.Define(f"{jetCollection}_{_calib}_raw", f"getRawVal(n{jetCollection}, {jetCollection}_{_calib}, {jetCollection}_rawFactor)")
+                 
+        if jetCollection == AK4collection:
+            for _calib in AK4Calibs:
+                a.Define(f"{jetCollection}_{_calib}_raw", f"getRawVal(n{jetCollection}, {jetCollection}_{_calib}, {jetCollection}_rawFactor)")
+
+
+
+
+
+        print(f'\nStep 1: JES corrections...')
         # Get the 4-digit year
         y = int(year.split('_')[0][:4])
 
@@ -63,8 +66,6 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         if jetCollection == AK8collection:
             algo  = 'AK8PFPuppi'
             json  = 'fatJet_jerc'
-            genJetColl = "GenJetAK8"
-            dRmax = 0.8
             # Determine whether to do JMR/JMS corrections to MC
             if (y <= 2018): # Run 2
                 doMass = True
@@ -78,8 +79,6 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             else:
                 algo = 'AK4PFPuppi'
             json = 'jet_jerc'
-            genJetColl = "GenJet"
-            dRmax = 0.4
             doMass = False
         else:
             available_colls = list(a._collectionOrg.GetCollectionNames())
@@ -146,38 +145,42 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             }
         }
         if jetCollection == AK8collection:    
-            calibdict = {
-                f"{jetCollection}_pt_raw":[jes],
-                f"{jetCollection}_msoftdrop_raw":[jes]
-            }
-            for AK8_extra in AK8Calib_extras:
-                calibdict[f"{AK8_extra}_raw"] = [jes]
+            calibdict = {}
+            for _calib in AK8Calibs:
+                calibdict[f"{jetCollection}_{_calib}_raw"] = [jes]
         elif jetCollection == AK4collection:
-            calibdict = {
-                f"{jetCollection}_pt_raw":[jes],
-                f"{jetCollection}_mass_raw":[jes],
-            }
-            for AK4_extra in AK4Calib_extras:
-                calibdict[f"{AK4_extra}_raw"] = [jes]
+            calibdict = {}
+            for _calib in AK4Calibs:
+                calibdict[f"{jetCollection}_{_calib}_raw"] = [jes]
         
 
         # Create the columns corresponding to the JES variations
-        if (a.isData):
-            if (calibrate):
-                a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
-            else:
-                a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
-        else:
-            # Don't calibrate yet until JER is calcuated
-            a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
-
-
+        a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
+        
 
 
 
         # Now handle JER corrections to MC only. JER corrections use the JES-corrected pT
-        if not a.isData:
-            print(f'\nStep 2: JER corrections...\n')
+        print(f'\nStep 2: JER corrections...\n')
+        if jetCollection == AK8collection:
+            genJetColl = "GenJetAK8"
+            dRmax = 0.4
+            if (y == 2024):
+                json  = 'jet_jerc' ###AD HOC SOLUTION!!!!!!!!!!!: 2024 fatjet json not avaliable, using AK4 jet correction instead
+        elif jetCollection == AK4collection:
+            genJetColl = "GenJet"
+            dRmax = 0.2
+        
+        if a.isData:
+            if jetCollection == AK8collection:
+                for _calib in AK8Calibs:
+                    a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom")
+                 
+            if jetCollection == AK4collection:
+                for _calib in AK4Calibs:
+                    a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom")
+
+        else:
 
             # Get the appropriate keys for the JER resolution and SF. These will be stored in the JES correctionset "cset_jes"
             key_res = [i for i in cset_jes if 'PtResolution' in i][0]   # Each correctionset has only one of these keys, so the list will always be one element long
@@ -197,7 +200,6 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
                 'TIMBER/Framework/src/JER_correctionlib_weight.cc',
                 [
                     fname_jes,  # Name of the jerc file for AK8 or AK4
-                    key,        # JES key
                     key_res,    # pt resolution key
                     key_sf,     # SF key
                     dRmax,      # used for gen<->reco matching. 0.8 for AK8, 0.4 for AK4
@@ -208,36 +210,55 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
 
             evalargs = {
                 jer: {
-                    "jets":f"{jetCollection}s",
-                    "genJets":f"{genJetColl}s",
+                    "nJet": f"n{jetCollection}", 
+                    "jet_pt": f"{jetCollection}_pt_raw_nom", 
+                    "jet_eta": f"{jetCollection}_eta", 
+                    "jet_phi": f"{jetCollection}_phi", 
+                    "nGenJet": f"n{genJetColl}", 
+                    "genJet_pt": f"{genJetColl}_pt", 
+                    "genJet_eta": f"{genJetColl}_eta", 
+                    "genJet_phi": f"{genJetColl}_phi", 
                     "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
                 }
             }
-
             if jetCollection == AK8collection:    
-                calibdict = {
-                    f"{jetCollection}_pt":[jes, jer],
-                    f"{jetCollection}_mass":[jes, jer],
-                    f"{jetCollection}_msoftdrop":[jes, jer]
-                }
-                for AK8_extra in AK8Calib_extras:
-                    calibdict[AK8_extra] = [jes, jer]
+                calibdict = {}
+                for _calib in AK8Calibs:
+                    calibdict[f"{jetCollection}_{_calib}_raw_nom"] = [jer]
             elif jetCollection == AK4collection:
-                calibdict = {
-                    f"{jetCollection}_pt":[jes, jer],
-                    f"{jetCollection}_mass":[jes, jer],
-                }
-                for AK8_extra in AK8Calib_extras:
-                    calibdict[AK8_extra] = [jes, jer]
+                calibdict = {}
+                for _calib in AK4Calibs:
+                    calibdict[f"{jetCollection}_{_calib}_raw_nom"] = [jer]
 
-            if (calibrate):
-                a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
-            else:
-                a.CalibrateVars({},evalargs,'',variationsFlag=(not a.isData))
+            a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
+            
+            if jetCollection == AK8collection:
+                for _calib in AK8Calibs:
+                    a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
+                    a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
+                    a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                    a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
+                    a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
+                 
+            if jetCollection == AK4collection:
+                for _calib in AK4Calibs:
+                    a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
+                    a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
+                    a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                    a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
+                    a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
+
+
+
+
+
+
+
+        continue
 
         # Now apply veto maps to Data and MC (Run 3 ONLY)
+        print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
         if (y > 2018 and jetCollection == "Jet"):
-            print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
             fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
             cset_vetomap = core.CorrectionSet.from_file(fname_vetomap)
             key_vetomap = [k for k in cset_vetomap][0]  # there is only one vetomap key, so the key will always be the first and only element
@@ -247,6 +268,13 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             a.Cut(f'{jetCollection}_JERC_jet_veto',f'{jetCollection}_jetmap_vetoed_events == 0')
 
 
-        print('\n----------------------------------------------------------------------------------------')
-        print('------------------------------Finished AutoJME -----------------------------------------')
-        print('----------------------------------------------------------------------------------------')
+
+
+
+
+
+
+
+    print('\n----------------------------------------------------------------------------------------')
+    print('------------------------------Finished AutoJME -----------------------------------------')
+    print('----------------------------------------------------------------------------------------')

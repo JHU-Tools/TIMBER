@@ -1,7 +1,8 @@
 // Requires CMSSW
 // Following the example from JME found here:
 // https://gitlab.cern.ch/cms-nanoAOD/jsonpog-integration/-/blob/master/examples/jercExample.C
-
+#ifndef JES_CORR
+#define JES_CORR
 #include <correction.h>
 #include <ROOT/RVec.hxx>
 
@@ -87,3 +88,6 @@ RVec<RVec<float>> JES_correctionlib_weight::eval(RVec<float> pt, RVec<float> eta
     }
     return out;
 };
+
+
+#endif
