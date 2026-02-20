@@ -9,10 +9,10 @@ import ROOT
 #This module is only validated with Run3 NanoAOD_v15 datasets.
 ################################################
 
-def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras = [], AK8Calib_extras = []):
+def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras = [], AK8Calib_extras = [], col_jetId = "Jet_jetId_corr"):
     '''
     @param a (analyzer): TIMBER analyzer object to be manipulated and returned.
-    @param jetCollections (str list): Names of the jet collection to correct. For example, it can take ["FatJet"], ["Jet"] or ["FatJet", "Jet"]
+    @param jetCollections (str list): Names of the jet collection to correct. For example, it can take ["FatJet"], ["Jet"] or ["FatJet", "Jet"]. However, it is ALWAYS recommended to include AK4 jets even if it is not used in your analysis, since it is used for Jet Veto Map, which requires correct correction of the AK4 jets
     @param year (str): Year associated with the input files to the analyzer
         Run 2 options: 2016preVFP_UL/EOY, 2016postVFP_UL/EOY, 2017_UL/EOY, 2018_UL/EOY
         Run 3 options: 2022_Prompt, 2022_Summer22, 2022_Summer22EE, 2023_Summer23, 2023_Summer23BPix, 2024_Summer24, 2024_Winter24
@@ -20,6 +20,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
     @param calibrate (bool): Whether to calibrate the pT and masses of the jets in the event using HadamardProduct. If False, then only produce the uncertainty columns
     @param AK4Calib_extras (str list): The extra NanoAOD columns of AK4 jets you want to calibrate. DON'T feed Raw values.
     @param AK8Calib_extras (str list): The extra NanoAOD columns of AK8 jets you want to calibrate. DON'T feed Raw values.
+    @param col_jetID (str): the column for jet ID used for JVM. The default Jet_jetId column in NanoAOD v12 - v14 is buggy and shouldn't be used. In NanoAOD v15 it doesn't exist at all. So please make a custom jetId column and feed it into this function.
     Raises:
         ValueError: Provided JetCollection does not exist in the analyzer's stored list of collections
         ValueError: Provided dataEra does not exist for the input year
@@ -252,19 +253,14 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
 
 
 
-
-
-        continue
-
         # Now apply veto maps to Data and MC (Run 3 ONLY)
         print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
-        if (y > 2018 and jetCollection == "Jet"):
+        if (y > 2018 and jetCollection == "Jet"): ##Only needed for AK4 Jets
             fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
             cset_vetomap = core.CorrectionSet.from_file(fname_vetomap)
             key_vetomap = [k for k in cset_vetomap][0]  # there is only one vetomap key, so the key will always be the first and only element
             CompileCpp(f'JERC_JetVeto {jetCollection}_jet_vetoer = JERC_JetVeto("{fname_vetomap}","{key_vetomap}");')
-            #a.Define(f'{jetCollection}_jetmap_vetoed_events',f'{jetCollection}_jet_vetoer.eval({jetCollection}s)')   # Pass in the TIMBER-created struct for the AK4 jets ("Jet"+"s")
-            a.Define(f'{jetCollection}_jetmap_vetoed_events',f'{jetCollection}_jet_vetoer.eval(Jets)')   # Pass in the TIMBER-created struct for the AK4 jets ("Jet"+"s")
+            a.Define(f'{jetCollection}_jetmap_vetoed_events',f'{jetCollection}_jet_vetoer.eval(nJet, Jet_pt_nom, Jet_eta, Jet_phi, {col_jetId}, Jet_chEmEF, Jet_neEmEF)')   
             a.Cut(f'{jetCollection}_JERC_jet_veto',f'{jetCollection}_jetmap_vetoed_events == 0')
 
 

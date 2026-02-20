@@ -26,7 +26,6 @@ JES_correctionlib_weight::JES_correctionlib_weight(std::string fname, std::strin
 
 // This implementation avoids using TIMBER's built-in Collection objects, which are difficult to work with and opaque from a developer standpoint
 RVec<RVec<float>> JES_correctionlib_weight::eval(RVec<float> pt, RVec<float> eta, RVec<float> phi, RVec<float> area, float fixedGridRhoFastjetAll, float run) {
-    std::cout<<"TESTJES"<<std::endl;
     RVec<RVec<float>> out (pt.size());
     for (size_t ijet = 0; ijet < pt.size(); ijet++) {
         // Map the JSON object name to the jet collection variable name
@@ -89,6 +88,5 @@ RVec<RVec<float>> JES_correctionlib_weight::eval(RVec<float> pt, RVec<float> eta
     }
     return out;
 };
-
 
 #endif
