@@ -46,7 +46,7 @@ class JERC_JetVeto {
             _total++;       // Increment the number of events studied
             for (size_t ijet = 0; ijet < nJet; ijet++) {
                 // First check whether we the jet passes the nominal "loose selection"
-                bool jet_passes = (Jet_pt[ijet] > 15) && (Jet_id[ijet] >= 2) && ((Jet_chEmEF[ijet] + Jet_neEmEF[ijet]) < 0.9) && abs(Jet_eta[ijet]) < 5.2;
+                bool jet_passes = (Jet_pt[ijet] > 15) && (Jet_id[ijet] >= 6) && ((Jet_chEmEF[ijet] + Jet_neEmEF[ijet]) < 0.9) && abs(Jet_eta[ijet]) < 5.2;
                 if (jet_passes) {   // Consult jet veto map
 
                     float veto;
