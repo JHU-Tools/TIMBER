@@ -28,10 +28,14 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
     Returns:
         analyzer: Manipulated version of the input analyzer object.
     '''
+    #####################################################################################################
     ########### calibrate=False is not supported anymore. since JER correction requires calibrated JES pt
+    ###   DO NOT USE THIS MODULE TO CORRECT FatJet_msoftdrop. USE AutoJME_mSD INSTEAD.
+    #####################################################################################################
+
     AK8collection = "FatJet"
     AK4collection = "Jet"
-    AK8Calibs = ["msoftdrop", "pt"] + AK8Calib_extras
+    AK8Calibs = ["mass", "pt"] + AK8Calib_extras
     AK4Calibs = ["mass", "pt"] + AK4Calib_extras
     print('----------------------------------------------------------------------------------------')
     print('--------------------------- Starting AutoJME -------------------------------------------')
@@ -264,8 +268,252 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             a.Cut(f'{jetCollection}_JERC_jet_veto',f'{jetCollection}_jetmap_vetoed_events == 0')
 
 
+    print('\n----------------------------------------------------------------------------------------')
+    print('------------------------------Finished AutoJME -----------------------------------------')
+    print('----------------------------------------------------------------------------------------')
 
 
+
+
+
+
+def AutoJME_mSD(a, year, dataEra=''):
+    '''
+    @param a (analyzer): TIMBER analyzer object to be manipulated and returned.
+    @param jetCollections (str list): Names of the jet collection to correct. For example, it can take ["FatJet"], ["Jet"] or ["FatJet", "Jet"]. However, it is ALWAYS recommended to include AK4 jets even if it is not used in your analysis, since it is used for Jet Veto Map, which requires correct correction of the AK4 jets
+    @param year (str): Year associated with the input files to the analyzer
+        Run 2 options: 2016preVFP_UL/EOY, 2016postVFP_UL/EOY, 2017_UL/EOY, 2018_UL/EOY
+        Run 3 options: 2022_Prompt, 2022_Summer22, 2022_Summer22EE, 2023_Summer23, 2023_Summer23BPix, 2024_Summer24, 2024_Winter24
+    @param dataEra (str): If providing data, include the "era" (e.g. A,B,C,D,..)
+    Returns:
+        analyzer: Manipulated version of the input analyzer object.
+    '''
+
+    print('----------------------------------------------------------------------------------------')
+    print('--------------------------- Starting AutoJME mSD -------------------------------------------')
+    print('----------------------------------------------------------------------------------------')
+
+
+
+    if ((a.isData) and (dataEra == '')):
+        raise ValueError(f'Running on data but no dataEra specified.')
+    CompileCpp('TIMBER/Framework/src/getRawVal.cc')
+
+    print(f'\nStep -1: Look for the subjets...')
+    a.Define("subjet1_mass", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_mass)")
+    a.Define("subjet1_pt", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_pt)")
+    a.Define("subjet1_eta", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_eta)")
+    a.Define("subjet1_phi", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_phi)")
+    a.Define("subjet1_area", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_area)")
+    a.Define("subjet1_rawFactor", "JME_defineVal(nFatJet, FatJet_subJetIdx1, SubJet_rawFactor)")
+    a.Define("subjet2_mass", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_mass)")
+    a.Define("subjet2_pt", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_pt)")
+    a.Define("subjet2_eta", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_eta)")
+    a.Define("subjet2_phi", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_phi)")
+    a.Define("subjet2_area", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_area)")
+    a.Define("subjet2_rawFactor", "JME_defineVal(nFatJet, FatJet_subJetIdx2, SubJet_rawFactor)")
+
+
+    print(f'\nStep 0: Calculate RAW value...')
+    a.Define(f"subjet1_mass_raw", f"getRawVal(nFatJet, subjet1_mass, subjet1_rawFactor)")
+    a.Define(f"subjet1_pt_raw", f"getRawVal(nFatJet, subjet1_pt, subjet1_rawFactor)")
+    a.Define(f"subjet2_mass_raw", f"getRawVal(nFatJet, subjet2_mass, subjet2_rawFactor)")
+    a.Define(f"subjet2_pt_raw", f"getRawVal(nFatJet, subjet2_pt, subjet2_rawFactor)")
+    ######################A INVALID INPUT PROBLEM##################
+
+
+
+
+
+    print(f'\nStep 1: JES corrections...')
+    # Get the 4-digit year
+    y = int(year.split('_')[0][:4])
+
+    # Determine the jet clustering and cleaning algorithm and which JSON file to use
+    if (y <= 2018): # Run 2
+        algo = 'AK4PFchs'
+    else:
+        algo = 'AK4PFPuppi'
+    json = 'jet_jerc'
+    doMass = False
+
+    # Determine the JEC level
+    level  = 'L1L2L3Res' # Currently only supporting the compound correction. This will cover all JERC required corretions
+    unc    = 'Total' # Only support Total uncertainty
+
+    # Load the CorrectionSet from the file hosted on CVMFS. These files are synced daily, see here: https://gitlab.cern.ch/cms-nanoAOD/jsonpog-integration/-/blob/master/README.md
+    fname_jes = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/{json}.json.gz"
+
+    print(f'Jet algorithm:  {algo}')
+    print(f'Uncertainty:    {unc}')
+    print(f'JEC level:      {level}')
+    print(f'Year:           {year}')
+    if (a.isData):
+        print(f'Era:            {dataEra}')
+
+    print("\nLoading JSON file: {}".format(fname_jes))
+    cset_jes = core.CorrectionSet.from_file(fname_jes)
+    keys = list(cset_jes.compound.keys()) # NOTE: we are using "cset_jes.compound" here b/c individual JEC levels have not been implemented for AutoJME, and we are just using the compound "L1L2L3Res" JEC level
+    print("available compound keys:")
+    print(keys)
+    # Find the appropriate CorrectionSet key for Data or MC
+    if (a.isData):
+        found = False
+        keysData = [k for k in keys if 'DATA' in k]
+        if "2022" in year:
+            for k in keysData:
+                idx_start = k.find("Run") 
+                idx_end = k.find("_", idx_start)
+                era = k[idx_start : idx_end]
+                if dataEra in era: 
+                    found = True
+                    key = k
+                    break
+            if not found:
+                raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
+        elif "2023" in year or "2024" in year: ###2023 and 2024 only has one data key with no era info
+            key = keysData[0]
+    else:
+        # There is only one compound key in the JSON for MC
+        key = [k for k in keys if 'MC' in k][0]
+
+    print(f'\nUsing compound JEC level key: "{key}"')
+    print(f'\nUsing compound JEC uncertainty\n')
+
+    jes1 = Calibration(
+        f"mSD1_JES",
+        "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
+        [fname_jes, key, key.replace(level,unc), a.isData], 
+        corrtype='Calibration'
+    )
+    jes2 = Calibration(
+        f"mSD2_JES",
+        "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
+        [fname_jes, key, key.replace(level,unc), a.isData], 
+        corrtype='Calibration'
+    )
+    evalargs1 = {
+        jes1: {
+            "pt": f"subjet1_pt_raw",
+            "eta": f"subjet1_eta",
+            "phi": f"subjet1_phi",
+            "area": f"subjet1_area",
+            "run":  "run",
+            "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
+        }
+    }
+    evalargs2 = {
+        jes2: {
+            "pt": f"subjet2_pt_raw",
+            "eta": f"subjet2_eta",
+            "phi": f"subjet2_phi",
+            "area": f"subjet2_area",
+            "run":  "run",
+            "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
+        }
+    }
+    calibdict1 = {"subjet1_pt_raw": [jes1], "subjet1_mass_raw": [jes1]}
+    calibdict2 = {"subjet2_pt_raw": [jes2], "subjet2_mass_raw": [jes2]}
+    
+
+    # Create the columns corresponding to the JES variations
+    a.CalibrateVars(calibdict1,evalargs1,'',variationsFlag=(not a.isData))
+    a.CalibrateVars(calibdict2,evalargs2,'',variationsFlag=(not a.isData))
+    
+
+
+
+    # Now handle JER corrections to MC only. JER corrections use the JES-corrected pT
+    print(f'\nStep 2: JER corrections...\n')
+    genJetColl = "GenJet"
+    dRmax = 0.2
+    
+    if a.isData:
+        for jetCollection in ["subjet1", "subjet2"]:
+            for  _calib in ["mass", "pt"]:
+                a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom")
+        
+        a.Define("FatJet_msoftdrop_nom", f"JME_invM(nFatJet, FatJet_subJetIdx1, FatJet_subJetIdx2, subjet1_pt_nom, subjet1_eta, subjet1_phi, subjet1_mass_nom, subjet2_pt_nom, subjet2_eta, subjet2_phi, subjet2_mass_nom)")
+    else:
+
+        # Get the appropriate keys for the JER resolution and SF. These will be stored in the JES correctionset "cset_jes"
+        key_res = [i for i in cset_jes if 'PtResolution' in i][0]   # Each correctionset has only one of these keys, so the list will always be one element long
+        key_sf  = [i for i in cset_jes if 'ScaleFactor' in i][0]
+
+        # Multiplicative factor to the difference b/w the GEN and RECO jet pT, used in the JER correction algorithm (see JER_correctionlib_weight.cc)
+        dpTmax = 3
+
+        print(f'Using JER resolution key "{key_res}"')
+        print(f'Using JER SF key         "{key_sf}"')
+        print(f'Using hybrid smearing method with GEN match parameters:')
+        print(f'\t delta pT max factor = {dpTmax}')
+        print(f'\t deltaR max          = {dRmax}\n')
+
+        jer1 = Calibration(
+            f"mSD1_JER",
+            'TIMBER/Framework/src/JER_correctionlib_weight.cc',
+            [
+                fname_jes,  # Name of the jerc file for AK8 or AK4
+                key_res,    # pt resolution key
+                key_sf,     # SF key
+                dRmax,      # used for gen<->reco matching. 0.8 for AK8, 0.4 for AK4
+                dpTmax      # dPtMaxFactor, default for CMS
+            ],
+            corrtype='Calibration'
+        )
+        jer2 = Calibration(
+            f"mSD2_JER",
+            'TIMBER/Framework/src/JER_correctionlib_weight.cc',
+            [
+                fname_jes,  # Name of the jerc file for AK8 or AK4
+                key_res,    # pt resolution key
+                key_sf,     # SF key
+                dRmax,      # used for gen<->reco matching. 0.8 for AK8, 0.4 for AK4
+                dpTmax      # dPtMaxFactor, default for CMS
+            ],
+        )
+
+        evalargs1 = {
+            jer1: {
+                "nJet": f"nFatJet", 
+                "jet_pt": f"subjet1_pt_raw_nom", 
+                "jet_eta": f"subjet1_eta", 
+                "jet_phi": f"subjet1_phi", 
+                "nGenJet": f"n{genJetColl}", 
+                "genJet_pt": f"{genJetColl}_pt", 
+                "genJet_eta": f"{genJetColl}_eta", 
+                "genJet_phi": f"{genJetColl}_phi", 
+                "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
+            }
+        }
+        evalargs2 = {
+            jer2: {
+                "nJet": f"nFatJet", 
+                "jet_pt": f"subjet2_pt_raw_nom", 
+                "jet_eta": f"subjet2_eta", 
+                "jet_phi": f"subjet2_phi", 
+                "nGenJet": f"n{genJetColl}", 
+                "genJet_pt": f"{genJetColl}_pt", 
+                "genJet_eta": f"{genJetColl}_eta", 
+                "genJet_phi": f"{genJetColl}_phi", 
+                "fixedGridRhoFastjetAll":"fixedGridRhoFastjetAll" if (y <= 2018) else "Rho_fixedGridRhoFastjetAll"
+            }
+        }
+        calibdict1 = {"subjet1_pt_raw_nom": [jer1], "subjet1_mass_raw_nom": [jer1]}
+        calibdict2 = {"subjet2_pt_raw_nom": [jer2], "subjet2_mass_raw_nom": [jer2]}
+
+        a.CalibrateVars(calibdict1,evalargs1,'',variationsFlag=(not a.isData))
+        a.CalibrateVars(calibdict2,evalargs2,'',variationsFlag=(not a.isData))
+        
+        for jetCollection in ["subjet1", "subjet2"]:
+            for  _calib in ["mass", "pt"]:
+                a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
+                a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
+                a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
+                a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
+        for variation in ["nom", "JES__up", "JES__down", "JER__up", "JER__down"]: 
+            a.Define(f"FatJet_msoftdrop_{variation}", f"JME_invM(nFatJet, FatJet_subJetIdx1, FatJet_subJetIdx2, subjet1_pt_{variation}, subjet1_eta, subjet1_phi, subjet1_mass_{variation}, subjet2_pt_{variation}, subjet2_eta, subjet2_phi, subjet2_mass_{variation})")
 
 
 
