@@ -877,7 +877,7 @@ class analyzer(object):
 
         return correctionsToApply
 
-    def MakeWeightCols(self,name='',node=None,correctionNames=None,dropList=[],correlations=[],extraNominal=''):
+    def MakeWeightCols(self,name='',node=None,correctionNames=None,dropList=[],correlations=[], uncerts_to_corr={},extraNominal=''):
         '''Makes columns/variables to store total weights based on the Corrections that have been added.
 
         This function automates the calculation of the columns that store the nominal weight and the 
@@ -959,6 +959,11 @@ class analyzer(object):
                         weights[corrname+'_up'] += ' * '+correctionName+'__up'
                         weights[corrname+'_down'] += ' * '+correctionName+'__down'
 
+                    for correction in uncerts_to_corr: #From Michael Hesford
+                        if corrname in uncerts_to_corr[correction]: #remove nominal correction from up/down uncert columns
+                            weights[corrname+'_up'] = weights[corrname+'_up'].replace(correction+'__nom * ','')
+                            weights[corrname+'_down'] = weights[corrname+'_down'].replace(correction+'__nom * ','')
+                    
                 elif corr.GetType() == 'corr':
                     continue
             
