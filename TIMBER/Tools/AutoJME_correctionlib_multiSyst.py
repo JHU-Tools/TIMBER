@@ -8,6 +8,8 @@ import ROOT
 import os
 ################################################
 #This module is only validated with Run3 NanoAOD_v15 datasets.
+#For MC ONLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#DON'T APPLY IT ON DATA!!!!!!!!!!!!!!!!!!!!!!!
 ################################################
 
 def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras = [], AK8Calib_extras = [], col_jetId = "Jet_jetId_corr"):
@@ -44,8 +46,8 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
 
 
 
-    if ((a.isData) and (dataEra == '')):
-        raise ValueError(f'Running on data but no dataEra specified.')
+    if ((a.isData)):
+        raise ValueError(f'Do not use this module for data.')
     CompileCpp('TIMBER/Framework/src/getRawVal.cc')
     CompileCpp('TIMBER/Framework/src/JERC_JetVeto.cc')
     for jetCollection in jetCollections:
@@ -92,7 +94,8 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
 
         # Determine the JEC level
         level  = 'L1L2L3Res' # Currently only supporting the compound correction. This will cover all JERC required corretions
-        unc    = 'Total' # Only support Total uncertainty
+        unc = ""
+
 
         # Load the CorrectionSet from the file hosted on CVMFS. These files are synced daily, see here: https://gitlab.cern.ch/cms-nanoAOD/jsonpog-integration/-/blob/master/README.md
         #fname_jes = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/{json}.json.gz"
@@ -108,37 +111,34 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
 
         print("\nLoading JSON file: {}".format(fname_jes))
         cset_jes = core.CorrectionSet.from_file(fname_jes)
-        keys = list(cset_jes.compound.keys()) # NOTE: we are using "cset_jes.compound" here b/c individual JEC levels have not been implemented for AutoJME, and we are just using the compound "L1L2L3Res" JEC level
-        print("available compound keys:")
-        print(keys)
+        compound_keys = list(cset_jes.compound.keys())
+        level_key = [k for k in compound_keys if 'MC' in k][0] 
+        keys = list(cset_jes)
+        L2L3_keys = []
+        L2_keys = []
+        L1_keys = []
+        for key in keys:
+            print(key)
+            if "Regrouped" in key and "Total" not in key: L2_keys.append(key)
+        for key in keys:
+            if "L1" in key: L1_keys.append(key) 
+        for key in keys:
+            if "L2L3" in key: L2L3_keys.append(key) 
+        print(L1_keys)
+        print(L2_keys)
+        print(L2L3_keys)
+        if len(L2_keys) != 11: raise ValueError(f'There are supposed to be 11 L2L3 variants but only {len(L2_keys)} were given!!!!!!!!!!')
         # Find the appropriate CorrectionSet key for Data or MC
-        if (a.isData):
-            found = False
-            keysData = [k for k in keys if 'DATA' in k]
-            if "2022" in year:
-                for k in keysData:
-                    idx_start = k.find("Run") 
-                    idx_end = k.find("_", idx_start)
-                    era = k[idx_start : idx_end]
-                    if dataEra in era: 
-                        found = True
-                        key = k
-                        break
-                if not found:
-                    raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
-            elif "2023" in year or "2024" in year: ###2023 and 2024 only has one data key with no era info
-                key = keysData[0]
-        else:
-            # There is only one compound key in the JSON for MC
-            key = [k for k in keys if 'MC' in k][0]
-
-        print(f'\nUsing compound JEC level key: "{key}"')
-        print(f'\nUsing compound JEC uncertainty "{key.replace(level,unc)}"\n')
+        unc_keys = ""
+        unc_names = []
+        for key in L2_keys:
+            unc_keys = unc_keys + key + ","
+            unc_names.append(key[key.find("Regrouped_")+10:key.find("_AK4PFP")])
 
         jes = Calibration(
             f"{jetCollection}_JES",
-            "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
-            [fname_jes, key, key.replace(level,unc), a.isData], 
+            "TIMBER/Framework/src/JES_correctionlib_multiSyst_weight.cc", 
+            [fname_jes, level_key, unc_keys, a.isData], 
             corrtype='Calibration'
         )
         evalargs = {
@@ -162,7 +162,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         
 
         # Create the columns corresponding to the JES variations
-        a.CalibrateVars(calibdict,evalargs,'',variationsFlag=(not a.isData))
+        a.CalibrateVars_multiSyst(calibdict,evalargs,'',variationsFlag=(not a.isData), syst_names = unc_names)
         
 
 
@@ -241,17 +241,20 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
             
             if jetCollection == AK8collection:
                 for _calib in AK8Calibs:
+                    
                     a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
-                    a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
-                    a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                    for unc_name in unc_names:
+                        a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_up", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_up")
+                        a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_down", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_down")
                     a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
                     a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
                  
             if jetCollection == AK4collection:
                 for _calib in AK4Calibs:
                     a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
-                    a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
-                    a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                    for unc_name in unc_names:
+                        a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_up", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_up")
+                        a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_down", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_down")
                     a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
                     a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
 
@@ -263,7 +266,7 @@ def AutoJME(a, jetCollections, year, dataEra='', calibrate=True, AK4Calib_extras
         print('\nStep 3: Applying JERC jet veto maps (Run 3 only)...')
         if (y > 2018 and jetCollection == "Jet"): ##Only needed for AK4 Jets
             #fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
-            fname_vetomap = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/jetvetomaps.json.gz"
+            fname_vetomap = os.path.dirname(os.path.abspath(__file__)) +  f"/newest_JERC/{year}/jetvetomaps.json.gz"
             cset_vetomap = core.CorrectionSet.from_file(fname_vetomap)
             key_vetomap = [k for k in cset_vetomap][0]  # there is only one vetomap key, so the key will always be the first and only element
             CompileCpp(f'JERC_JetVeto {jetCollection}_jet_vetoer = JERC_JetVeto("{fname_vetomap}","{key_vetomap}");')
@@ -346,7 +349,7 @@ def AutoJME_mSD(a, year, dataEra=''):
 
     # Load the CorrectionSet from the file hosted on CVMFS. These files are synced daily, see here: https://gitlab.cern.ch/cms-nanoAOD/jsonpog-integration/-/blob/master/README.md
     #fname_jes = f"/cvmfs/cms.cern.ch/rsync/cms-nanoAOD/jsonpog-integration/POG/JME/{year}/{json}.json.gz"
-    fname_jes = os.path.dirname(os.path.abspath(__file__)) + f"/newest_JERC/{year}/{json}.json.gz"
+    fname_jes = os.path.dirname(os.path.abspath(__file__)) +  f"/newest_JERC/{year}/{json}.json.gz"
 
     print(f'Jet algorithm:  {algo}')
     print(f'Uncertainty:    {unc}')
@@ -357,43 +360,44 @@ def AutoJME_mSD(a, year, dataEra=''):
 
     print("\nLoading JSON file: {}".format(fname_jes))
     cset_jes = core.CorrectionSet.from_file(fname_jes)
-    keys = list(cset_jes.compound.keys()) # NOTE: we are using "cset_jes.compound" here b/c individual JEC levels have not been implemented for AutoJME, and we are just using the compound "L1L2L3Res" JEC level
-    print("available compound keys:")
-    print(keys)
+    compound_keys = list(cset_jes.compound.keys())
+    level_key = [k for k in compound_keys if 'MC' in k][0]
+    keys = list(cset_jes)
+    L2L3_keys = []
+    L2_keys = []
+    L1_keys = []
+    for key in keys:
+        print(key)
+        if "Regrouped" in key and "Total" not in key: L2_keys.append(key)
+    for key in keys:
+        if "L1" in key: L1_keys.append(key)
+    for key in keys:
+        if "L2L3" in key: L2L3_keys.append(key)
+    print(L1_keys)
+    print(L2_keys)
+    print(L2L3_keys)
+    if len(L2_keys) != 11: raise ValueError(f'There are supposed to be 11 L2L3 variants, but only {len(L2_keys)} were given!!!!!!!!!!')
     # Find the appropriate CorrectionSet key for Data or MC
-    if (a.isData):
-        found = False
-        keysData = [k for k in keys if 'DATA' in k]
-        if "2022" in year:
-            for k in keysData:
-                idx_start = k.find("Run") 
-                idx_end = k.find("_", idx_start)
-                era = k[idx_start : idx_end]
-                if dataEra in era: 
-                    found = True
-                    key = k
-                    break
-            if not found:
-                raise ValueError(f'The dataEra {dataEra} does not correspond with any keys in the JSON CorrectionSet. Available data keys are: {keysData}')            
-        elif "2023" in year or "2024" in year: ###2023 and 2024 only has one data key with no era info
-            key = keysData[0]
-    else:
-        # There is only one compound key in the JSON for MC
-        key = [k for k in keys if 'MC' in k][0]
+    unc_keys = ""
+    unc_names=[]
+    for key in L2_keys:
+        unc_keys = unc_keys + key + ","
+        unc_names.append(key[key.find("Regrouped_")+10:key.find("_AK4PFP")])
+
 
     print(f'\nUsing compound JEC level key: "{key}"')
     print(f'\nUsing compound JEC uncertainty\n')
 
     jes1 = Calibration(
         f"mSD1_JES",
-        "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
-        [fname_jes, key, key.replace(level,unc), a.isData], 
+        "TIMBER/Framework/src/JES_correctionlib_multiSyst_weight.cc", 
+        [fname_jes, level_key, unc_keys, a.isData], 
         corrtype='Calibration'
     )
     jes2 = Calibration(
         f"mSD2_JES",
-        "TIMBER/Framework/src/JES_correctionlib_weight.cc", 
-        [fname_jes, key, key.replace(level,unc), a.isData], 
+        "TIMBER/Framework/src/JES_correctionlib_multiSyst_weight.cc", 
+        [fname_jes, level_key, unc_keys, a.isData], 
         corrtype='Calibration'
     )
     evalargs1 = {
@@ -421,8 +425,8 @@ def AutoJME_mSD(a, year, dataEra=''):
     
 
     # Create the columns corresponding to the JES variations
-    a.CalibrateVars(calibdict1,evalargs1,'',variationsFlag=(not a.isData))
-    a.CalibrateVars(calibdict2,evalargs2,'',variationsFlag=(not a.isData))
+    a.CalibrateVars_multiSyst(calibdict1,evalargs1,'',variationsFlag=(not a.isData), syst_names = unc_names)
+    a.CalibrateVars_multiSyst(calibdict2,evalargs2,'',variationsFlag=(not a.isData), syst_names = unc_names)
     
 
 
@@ -512,13 +516,16 @@ def AutoJME_mSD(a, year, dataEra=''):
         for jetCollection in ["subjet1", "subjet2"]:
             for  _calib in ["mass", "pt"]:
                 a.Define(f"{jetCollection}_{_calib}_nom", f"{jetCollection}_{_calib}_raw_nom_nom")
-                a.Define(f"{jetCollection}_{_calib}_JES__up", f"{jetCollection}_{_calib}_raw_JES__up")
-                a.Define(f"{jetCollection}_{_calib}_JES__down", f"{jetCollection}_{_calib}_raw_JES__down")
+                for unc_name in unc_names:
+                    a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_up", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_up")
+                    a.Define(f"{jetCollection}_{_calib}_JES__{unc_name}_down", f"{jetCollection}_{_calib}_raw_JES__{unc_name}_down")
                 a.Define(f"{jetCollection}_{_calib}_JER__up", f"{jetCollection}_{_calib}_raw_nom_JER__up")
                 a.Define(f"{jetCollection}_{_calib}_JER__down", f"{jetCollection}_{_calib}_raw_nom_JER__down")
-        for variation in ["nom", "JES__up", "JES__down", "JER__up", "JER__down"]: 
+        for variation in ["nom", "JER__up", "JER__down"]: 
             a.Define(f"FatJet_msoftdrop_{variation}", f"JME_invM(nFatJet, FatJet_subJetIdx1, FatJet_subJetIdx2, subjet1_pt_{variation}, subjet1_eta, subjet1_phi, subjet1_mass_{variation}, subjet2_pt_{variation}, subjet2_eta, subjet2_phi, subjet2_mass_{variation})")
-
+        for unc_name in unc_names:
+            a.Define(f"FatJet_msoftdrop_JES__{unc_name}_up", f"JME_invM(nFatJet, FatJet_subJetIdx1, FatJet_subJetIdx2, subjet1_pt_JES__{unc_name}_up, subjet1_eta, subjet1_phi, subjet1_mass_JES__{unc_name}_up, subjet2_pt_JES__{unc_name}_up, subjet2_eta, subjet2_phi, subjet2_mass_JES__{unc_name}_up)")
+            a.Define(f"FatJet_msoftdrop_JES__{unc_name}_down", f"JME_invM(nFatJet, FatJet_subJetIdx1, FatJet_subJetIdx2, subjet1_pt_JES__{unc_name}_down, subjet1_eta, subjet1_phi, subjet1_mass_JES__{unc_name}_down, subjet2_pt_JES__{unc_name}_down, subjet2_eta, subjet2_phi, subjet2_mass_JES__{unc_name}_down)")
 
 
 
