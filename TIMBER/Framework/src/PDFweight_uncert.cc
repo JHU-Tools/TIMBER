@@ -9,6 +9,7 @@ PDFweight_uncert::PDFweight_uncert(int lhaID, bool ignoreEmptyBranch){
     lhaid_file.open(std::string(std::getenv("TIMBERPATH"))+"TIMBER/data/pdfsets.index",std::fstream::in);
     std::string line;
     std::vector<std::string> line_parts;
+    bool lha_found = false;
     while (getline(lhaid_file, line)) {
         line_parts = Pythonic::Split(line,' ');
         if (lhaid == (int)std::stoi(line_parts[0])) {
@@ -16,8 +17,12 @@ PDFweight_uncert::PDFweight_uncert(int lhaID, bool ignoreEmptyBranch){
             if (Pythonic::InString("hessian",line_parts[1])) {
                 hessian = true;
             } else { hessian = false; }
+            lha_found = true;
+            break;
         };
     }
+    if ( ! lha_found)
+        throw "LHA ID not found in the LHA list. Please update TIMBER/data/pdfsets.index in TIMBER.";
 };
 
 PDFweight_uncert::~PDFweight_uncert(){};

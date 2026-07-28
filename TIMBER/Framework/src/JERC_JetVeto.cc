@@ -42,23 +42,18 @@ class JERC_JetVeto {
          *
          * @param jets TIMBER-created structure for the AK4 jet collection
          */
-        template <class T>
-        int eval(std::vector<T> jets) {
-            int veto = 0;   // Start out assuming we don't veto the event
+        int eval(int nJet, RVec<float> Jet_pt, RVec<float> Jet_eta, RVec<float> Jet_phi, RVec<float> Jet_id, RVec<float> Jet_chEmEF, RVec<float> Jet_neEmEF) {
             _total++;       // Increment the number of events studied
-            for (size_t ijet = 0; ijet < jets.size(); ijet++) {
+            for (size_t ijet = 0; ijet < nJet; ijet++) {
                 // First check whether we the jet passes the nominal "loose selection"
-                bool jet_passes = (jets[ijet].pt > 15) && (jets[ijet].jetId == 6) && ((jets[ijet].chEmEF + jets[ijet].neEmEF) < 0.9);
+                bool jet_passes = (Jet_pt[ijet] > 15) && (Jet_id[ijet] >= 6) && ((Jet_chEmEF[ijet] + Jet_neEmEF[ijet]) < 0.9) && abs(Jet_eta[ijet]) < 5.2;
                 if (jet_passes) {   // Consult jet veto map
-                    // First impose checks on valid eta and phi. The eta/phi variables have a certain allowed range in correctionlib and will fail if passed a value outside that range.
-                    if (abs(jets[ijet].eta) > 5.191) {continue;}
-                    if (abs(jets[ijet].phi) > 3.1415926536) {continue;}
 
                     float veto;
                     std::map<std::string, correction::Variable::Type> map {
                         {"type", "jetvetomap"},  // name of the type of veto map. The recommended map for analyses is 'jetvetomap'. Other possible values: jetvetomap, jetvetomap_all, jetvetomap_hbp2m1, jetvetomap_hem1516, jetvetomap_hot
-                        {"eta", jets[ijet].eta},
-                        {"phi", jets[ijet].phi}
+                        {"eta", Jet_eta[ijet]},
+                        {"phi", Jet_phi[ijet]}
                     };
                     correction::Correction::Ref ref = _cset->at(_key);
                     std::vector<correction::Variable::Type> inputs;
@@ -72,7 +67,7 @@ class JERC_JetVeto {
                     }
                 }
             }
-            return veto;    // Return 0 if no vetoed jet found
+            return 0;    // Return 0 if no vetoed jet found
         };
 };
 

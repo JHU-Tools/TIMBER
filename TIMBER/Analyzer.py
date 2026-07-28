@@ -8,6 +8,8 @@ from TIMBER.CollectionOrganizer import CollectionOrganizer
 from TIMBER.Tools.Common import GenerateHash, GetHistBinningTuple, CompileCpp, ConcatCols, GetStandardFlags, ExecuteCmd, LoadColumnNames, ProgressBar
 from clang import cindex
 from collections import OrderedDict
+import array
+import numpy
 
 import ROOT
 import pprint, copy, os, subprocess, textwrap, re, glob
@@ -875,7 +877,7 @@ class analyzer(object):
 
         return correctionsToApply
 
-    def MakeWeightCols(self,name='',node=None,correctionNames=None,dropList=[],correlations=[],extraNominal=''):
+    def MakeWeightCols(self,name='',node=None,correctionNames=None,dropList=[],correlations=[], uncerts_to_corr={},extraNominal=''):
         '''Makes columns/variables to store total weights based on the Corrections that have been added.
 
         This function automates the calculation of the columns that store the nominal weight and the 
@@ -957,6 +959,11 @@ class analyzer(object):
                         weights[corrname+'_up'] += ' * '+correctionName+'__up'
                         weights[corrname+'_down'] += ' * '+correctionName+'__down'
 
+                    for correction in uncerts_to_corr: #From Michael Hesford
+                        if corrname in uncerts_to_corr[correction]: #remove nominal correction from up/down uncert columns
+                            weights[corrname+'_up'] = weights[corrname+'_up'].replace(correction+'__nom * ','')
+                            weights[corrname+'_down'] = weights[corrname+'_down'].replace(correction+'__nom * ','')
+                    
                 elif corr.GetType() == 'corr':
                     continue
             
@@ -1023,6 +1030,8 @@ class analyzer(object):
             histtitle = '%s__%s'%(baseTitle,cname.replace('weight__','').replace('__nominal',''))
 
             # Build the tuple to give as argument for template
+            if len(binningTuple) == 4:
+                binningTuple = (binningTuple[0], array.array("d", numpy.array(binningTuple[1])), binningTuple[2], array.array("d", numpy.array(binningTuple[3])))
             template_attr = (histname,histtitle) + binningTuple
 
             if dimension == 1: 
